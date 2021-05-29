@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using UnityEngine;
 
 namespace kcp2k.Examples
@@ -9,10 +8,13 @@ namespace kcp2k.Examples
         // configuration
         public ushort Port = 7777;
 
+        public int SendPerTick = 100;
+        byte[] message = new byte[]{0x01, 0x02, 0x03, 0x04};
+
         // server
         public KcpServer server = new KcpServer(
             (connectionId) => {},
-            (connectionId, message) => Debug.Log($"KCP: OnServerDataReceived({connectionId}, {BitConverter.ToString(message.Array, message.Offset, message.Count)})"),
+            (connectionId, message) => {}, //Debug.Log($"KCP: OnServerDataReceived({connectionId}, {BitConverter.ToString(message.Array, message.Offset, message.Count)})"),
             (connectionId) => {},
             true,
             10
@@ -25,10 +27,25 @@ namespace kcp2k.Examples
             Log.Info = Debug.Log;
             Log.Warning = Debug.LogWarning;
             Log.Error = Debug.LogError;
+
+            // start server in awake before client
+            server.Start(Port);
         }
 
         public void LateUpdate() => server.Tick();
 
+        public void FixedUpdate()
+        {
+            if (server.connections.Count > 0)
+            {
+                for (int i = 0; i < SendPerTick; ++i)
+                {
+                    server.Send(0, new ArraySegment<byte>(message), KcpChannel.Unreliable);
+                }
+            }
+        }
+
+        /* no GUI to avoid allocations for easier profiling
         void OnGUI()
         {
             int firstclient = server.connections.Count > 0 ? server.connections.First().Key : -1;
@@ -57,5 +74,6 @@ namespace kcp2k.Examples
             }
             GUILayout.EndArea();
         }
+        */
     }
 }
