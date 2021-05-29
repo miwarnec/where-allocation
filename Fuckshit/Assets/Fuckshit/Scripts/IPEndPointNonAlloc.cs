@@ -18,6 +18,7 @@ namespace Fuckshit
         // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPEndPoint.cs#L136
         //
         // let's overwrite for a version that does not allocate
+        public SocketAddress lastSocketAddress;
         public override EndPoint Create(SocketAddress socketAddress)
         {
             Debug.LogWarning($"{nameof(IPEndPointNonAlloc)}.Create() hook");
@@ -39,6 +40,10 @@ namespace Fuckshit
             //         int port = SocketAddressPal.GetPort(Buffer);
             //         return new IPEndPoint(iPAddress, port);
             //     }
+
+            // let's store the socketAddress and return ourselves instead.
+            lastSocketAddress = socketAddress;
+            return this;
         }
     }
 }
