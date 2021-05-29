@@ -155,7 +155,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Port: 7777
-  SendPerTick: 100
+  SendPerTick: 1
 --- !u!114 &78586273
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -169,7 +169,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Port: 7777
-  SendPerTick: 100
+  SendPerTick: 1
 --- !u!4 &78586274
 Transform:
   m_ObjectHideFlags: 0

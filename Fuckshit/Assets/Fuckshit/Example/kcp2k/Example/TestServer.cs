@@ -8,7 +8,8 @@ namespace kcp2k.Examples
         // configuration
         public ushort Port = 7777;
 
-        public int SendPerTick = 100;
+        // send per UPDATE (easier to measure in profiler than per FixedUpdate)
+        public int SendPerUpdate = 100;
         byte[] message = new byte[]{0x01, 0x02, 0x03, 0x04};
 
         // server
@@ -32,18 +33,18 @@ namespace kcp2k.Examples
             server.Start(Port);
         }
 
-        public void LateUpdate() => server.Tick();
-
-        public void FixedUpdate()
+        public void Update()
         {
             if (server.connections.Count > 0)
             {
-                for (int i = 0; i < SendPerTick; ++i)
+                for (int i = 0; i < SendPerUpdate; ++i)
                 {
                     server.Send(0, new ArraySegment<byte>(message), KcpChannel.Unreliable);
                 }
             }
         }
+
+        public void LateUpdate() => server.Tick();
 
         /* no GUI to avoid allocations for easier profiling
         void OnGUI()
