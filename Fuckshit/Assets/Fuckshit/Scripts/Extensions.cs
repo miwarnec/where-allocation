@@ -27,16 +27,14 @@ namespace Fuckshit
             // obvious that IPEndPointNonAlloc.Create does NOT create a new
             // IPEndPoint. it saves the result in IPEndPointNonAlloc.temp!
             EndPoint casted = remoteEndPoint;
-            int received = socket.ReceiveFrom(buffer, offset, size, socketFlags, ref casted);
-            return received;
+            return socket.ReceiveFrom(buffer, offset, size, socketFlags, ref casted);
         }
 
         // same as above, different parameters
         public static int ReceiveFrom_NonAlloc(this Socket socket, byte[] buffer, IPEndPointNonAlloc remoteEndPoint)
         {
             EndPoint casted = remoteEndPoint;
-            int received = socket.ReceiveFrom(buffer, ref casted);
-            return received;
+            return socket.ReceiveFrom(buffer, ref casted);
         }
     }
 }
