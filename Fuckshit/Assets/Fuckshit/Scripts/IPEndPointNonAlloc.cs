@@ -11,7 +11,7 @@ namespace Fuckshit
         // -> instead, serialize only once in constructor
         // IMPORTANT: DO NOT MODIFY
         // -> internal so tests can validate that it's never changed
-        internal readonly SocketAddress serialized;
+        internal readonly SocketAddress cache;
 
         // IPEndPoint.Serialize allocates a new SocketAddress each time:
         // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPEndPoint.cs#L128
@@ -23,11 +23,11 @@ namespace Fuckshit
         // (which does NOT call our overwritten one)
         public IPEndPointNonAlloc(long address, int port) : base(address, port)
         {
-            serialized = base.Serialize();
+            cache = base.Serialize();
         }
         public IPEndPointNonAlloc(IPAddress address, int port) : base(address, port)
         {
-            serialized = base.Serialize();
+            cache = base.Serialize();
         }
 
         // ReceiveFrom calls EndPoint.Create():

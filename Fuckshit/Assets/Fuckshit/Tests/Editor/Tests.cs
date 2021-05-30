@@ -62,7 +62,7 @@ namespace Fuckshit.Tests
             EndPoint newClientEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
 
             // get original hash
-            int originalHash = ((IPEndPointNonAlloc)newClientEP).serialized.GetHashCode();
+            int originalHash = ((IPEndPointNonAlloc)newClientEP).cache.GetHashCode();
 
             // do it twice, just to be sure
             for (int i = 0; i < 2; ++i)
@@ -76,7 +76,7 @@ namespace Fuckshit.Tests
             }
 
             // check hash again
-            int hash = ((IPEndPointNonAlloc)newClientEP).serialized.GetHashCode();
+            int hash = ((IPEndPointNonAlloc)newClientEP).cache.GetHashCode();
             Assert.That(hash, Is.EqualTo(originalHash));
         }
     }
