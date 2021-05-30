@@ -53,5 +53,31 @@ namespace Fuckshit.Tests
             Assert.That(result, Is.True);
             Assert.That(received.SequenceEqual(message2));
         }
+
+        // need to guarantee that ReceiveFrom never overwrites the original
+        // cached serialization
+        [Test]
+        public void ReceiveFromNeverChangesCachedSerialization()
+        {
+            EndPoint newClientEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
+
+            // get original hash
+            int originalHash = ((IPEndPointNonAlloc)newClientEP).serialized.GetHashCode();
+
+            // do it twice, just to be sure
+            for (int i = 0; i < 2; ++i)
+            {
+                // send a message to server
+                ClientSend(message);
+
+                // poll with IPEndPointNonAlloc
+                bool result = ServerPoll(ref newClientEP, out ArraySegment<byte> _);
+                Assert.That(result, Is.True);
+            }
+
+            // check hash again
+            int hash = ((IPEndPointNonAlloc)newClientEP).serialized.GetHashCode();
+            Assert.That(hash, Is.EqualTo(originalHash));
+        }
     }
 }

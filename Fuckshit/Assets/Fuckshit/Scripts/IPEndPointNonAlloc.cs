@@ -10,19 +10,25 @@ namespace Fuckshit
         // -> this creates a new SocketAddress each time, which allocates.
         // -> instead, serialize only once in constructor
         // IMPORTANT: DO NOT MODIFY
-        /*SocketAddress serialized;
+        // -> internal so tests can validate that it's never changed
+        internal readonly SocketAddress serialized;
 
-        void CacheSerialization()
+        // IPEndPoint.Serialize allocates a new SocketAddress each time:
+        // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPEndPoint.cs#L128
+        //
+        // we can't do it manually because the SocketAddress ctor is internal:
+        //   serialized = new SocketAddress(Address, Port);
+        //
+        // BUT we can still call the base Serialize function:
+        // (which does NOT call our overwritten one)
+        public IPEndPointNonAlloc(long address, int port) : base(address, port)
         {
-            // IPEndPoint.Serializes does this:
-            // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPEndPoint.cs#L128
-            // Let SocketAddress do the bulk of the work
-            // TODO the constructor is internal. we can't use it.
-            serialized = new SocketAddress(Address, Port);
-        }*/
-
-        public IPEndPointNonAlloc(long address, int port) : base(address, port) {}// => CacheSerialization();
-        public IPEndPointNonAlloc(IPAddress address, int port) : base(address, port) {}//=> CacheSerialization();
+            serialized = base.Serialize();
+        }
+        public IPEndPointNonAlloc(IPAddress address, int port) : base(address, port)
+        {
+            serialized = base.Serialize();
+        }
 
         // ReceiveFrom calls EndPoint.Create():
         // https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1761
