@@ -62,7 +62,8 @@ namespace Fuckshit.Examples
                 // nonalloc
                 int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, out SocketAddress remoteAddress);
                 // SocketAddress.GetHashCode hashes port + address without
-                // allocations!
+                // allocations:
+                // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/SocketAddress.cs#L262
                 fromHash = remoteAddress.GetHashCode();
 
                 // kcp needs the hashcode from the result too.
