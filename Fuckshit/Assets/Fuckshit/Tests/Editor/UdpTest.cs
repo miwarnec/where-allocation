@@ -55,9 +55,11 @@ namespace Fuckshit.Tests
             if (serverSocket != null && serverSocket.Poll(0, SelectMode.SelectRead))
             {
                 // get message
-                int msgLength = serverSocket.ReceiveFrom(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, ref newClientEP);
+                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, out SocketAddress remoteAddress);
                 Debug.Log($"ServerPoll from {newClientEP}:  {BitConverter.ToString(receiveBuffer, 0, msgLength)}");
                 message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
+                // convert SocketAddress to EndPoint again, just for tests
+                newClientEP = newClientEP.Create(remoteAddress);
                 return true;
             }
             return false;
