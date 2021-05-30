@@ -5,7 +5,7 @@ namespace Fuckshit
 {
     public class IPEndPointNonAlloc : IPEndPoint
     {
-        // Two steps to remove most of the allocations in ReceiveFrom_Internal:
+        // Two steps to remove allocations in ReceiveFrom_Internal:
         //
         // 1.) remoteEndPoint.Serialize():
         //     https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1733
