@@ -55,12 +55,20 @@ namespace Fuckshit.Examples
         {
             if (serverSocket != null && serverSocket.Poll(0, SelectMode.SelectRead))
             {
-                // get message
-                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, out SocketAddress remoteAddress);
+                // alloc
+                int msgLength = serverSocket.ReceiveFrom(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, ref newClientEP);
+
+                // nonalloc
+                //int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, out SocketAddress remoteAddress);
                 //Debug.Log($"ServerPoll from {newClientEP}:  {BitConverter.ToString(receiveBuffer, 0, msgLength)}");
                 //message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
                 // convert SocketAddress to EndPoint again, just for tests
                 //newClientEP = newClientEP.Create(remoteAddress);
+
+                // kcp needs the hashcode from the result too.
+                // which allocates. so let's test it as well.
+                int hash = newClientEP.GetHashCode();
+
                 return msgLength > 0;
             }
             return false;
