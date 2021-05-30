@@ -1,6 +1,10 @@
 # Fuckshit
 **_Nearly_** allocation free C# Socket.ReceiveFrom**NonAlloc** for multiplayer C# games, by vis2k.
 
+Unity 2019 LTS Mono version is old and still contains ReceiveFrom allocations that we can't work around.
+With the Mono version on Github however, this code should be allocation free.
+(we are still testing...)
+
 # ReceiveFrom Allocations
 C#'s Socket.ReceiveFrom has heavy allocations (338 byte):
 
