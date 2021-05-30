@@ -15,7 +15,7 @@ namespace Fuckshit.Tests
 
         // server
         public Socket serverSocket;
-        public IPEndPointNonAlloc newClientEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
+        public IPEndPointNonAlloc reusableReceiveEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
 
         // client
         public IPEndPoint clientRemoteEndPoint;
@@ -55,8 +55,8 @@ namespace Fuckshit.Tests
             if (serverSocket != null && serverSocket.Poll(0, SelectMode.SelectRead))
             {
                 // get message
-                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, newClientEP);
-                Debug.Log($"ServerPoll from {newClientEP}:  {BitConverter.ToString(receiveBuffer, 0, msgLength)}");
+                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, reusableReceiveEP);
+                Debug.Log($"ServerPoll from {reusableReceiveEP}:  {BitConverter.ToString(receiveBuffer, 0, msgLength)}");
                 message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
                 return msgLength > 0;
             }

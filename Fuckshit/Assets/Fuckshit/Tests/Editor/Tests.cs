@@ -61,7 +61,7 @@ namespace Fuckshit.Tests
             SocketAddress random = new SocketAddress(AddressFamily.InterNetwork);
 
             Assert.Throws<Exception>(() => {
-                newClientEP.Create(random);
+                reusableReceiveEP.Create(random);
             });
         }
 
@@ -71,8 +71,8 @@ namespace Fuckshit.Tests
         [Test]
         public void CreateReturnsSelf()
         {
-            EndPoint created = newClientEP.Create(newClientEP.temp);
-            Assert.That(created, Is.EqualTo(newClientEP));
+            EndPoint created = reusableReceiveEP.Create(reusableReceiveEP.temp);
+            Assert.That(created, Is.EqualTo(reusableReceiveEP));
         }
     }
 }
