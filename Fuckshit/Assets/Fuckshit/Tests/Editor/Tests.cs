@@ -19,7 +19,7 @@ namespace Fuckshit.Tests
         }
 
         [Test]
-        public void ReceiveFrom()
+        public void ClientToServer()
         {
             // send a message to server
             ClientSend(message);
@@ -32,7 +32,7 @@ namespace Fuckshit.Tests
 
         // send two messages to server
         [Test]
-        public void ReceiveFromMultiple()
+        public void ClientToServer_Multiple()
         {
             // send a message to server
             ClientSend(message);
