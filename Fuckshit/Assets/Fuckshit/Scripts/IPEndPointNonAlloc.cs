@@ -43,5 +43,24 @@ namespace Fuckshit
             lastSocketAddress = socketAddress;
             return this;
         }
+
+        // ReceiveFrom calls remoteEndPoint.Serialize to get the SocketAddress
+        // at first:
+        // https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1733
+        // -> our Create() never applies the received SocketAddress to the
+        //    IPEndPoint. we only store it in a field.
+        // -> Serialize() is expected to return the last SocketAddress.
+        // -> which we have in .lastSocketAddress, so let's just return it.
+        public override SocketAddress Serialize()
+        {
+            // if ReceiveFrom hasn't set a lastSocketAddress yet, then call
+            // IPEndPoint.Serialize() for the original IPEndPoint, just like
+            // ReceiveFrom() does it.
+            if (lastSocketAddress == null)
+                return base.Serialize();
+
+            // otherwise return the saved one from last receive.
+            return lastSocketAddress;
+        }
     }
 }
