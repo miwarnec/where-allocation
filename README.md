@@ -3,6 +3,7 @@
 
 # ReceiveFrom Allocations
 C#'s Socket.ReceiveFrom has heavy allocations (338 byte):
+
 <img width="595" alt="ReceiveFrom_Before" src="https://user-images.githubusercontent.com/16416509/120093573-d24f7f80-c14d-11eb-8afe-573942b71b60.png">
 
 Which is a huge issue for multiplayer games.
@@ -11,6 +12,7 @@ Which is a huge issue for multiplayer games.
 
 # Why Socket.ReceiveFrom Allocates
 It calls EndPoint.Create(SocketAddress) to return a new EndPoint each time:
+
 https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1761
 
 # How Fuckshit avoids the Allocations
@@ -21,6 +23,7 @@ IPEndPointNonAlloc inherits from IPEndPoint to overwrite Create() and Serialize(
 As result, we get a **3.75x** reduction in allocations. 
 
 ReceiveFromNonAlloc only allocates 90 byte:
+
 <img width="580" alt="ReceiveFrom_IPEndPointNonAlloc_ReceiveNonAlloc" src="https://user-images.githubusercontent.com/16416509/120093652-3ffbab80-c14e-11eb-93e9-0d350bead4fa.png">
 
 # Usage Guide
@@ -50,6 +53,7 @@ connections[connectionId].OnMessage(message)
 
 # Remaining Allocations
 Socket.ReceiveFrom_Internal still allocates 90 bytes:
+
 https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1885
 
 # Showcase
