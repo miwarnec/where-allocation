@@ -13,7 +13,7 @@ namespace Fuckshit.Examples
         // server
         public Socket serverSocket;
         IPEndPointNonAlloc reusableRecvEP = new IPEndPointNonAlloc(IPAddress.Any, 0); // for reading only
-        IPEndPointNonAlloc newClientEP; // true copy of the connected client's EP
+        IPEndPointNonAlloc reusableSendEP; // true copy of the connected client's EP
         byte[] receiveBuffer = new byte[1200];
 
         // client
@@ -54,6 +54,19 @@ namespace Fuckshit.Examples
             Thread.Sleep(100);
         }
 
+        public void ServerSend(byte[] data)
+        {
+            // send and wait a little bit for it to be delivered
+            // NOTE: this does not allocate because it doesn't have the
+            //       IPEndPoint as last parameter, unlike ServerSend.
+
+            // which EP to use?
+            // IPEndPointNonAlloc caches Serializes just fine.
+            // just need to use an actual one with the correct SocketAddress etc.
+            serverSocket.SendTo_NonAlloc(data, 0, data.Length, SocketFlags.None, reusableSendEP);
+            Thread.Sleep(100);
+        }
+
         public bool ServerPoll(out int fromHash, out ArraySegment<byte> message)
         {
             if (serverSocket != null && serverSocket.Poll(0, SelectMode.SelectRead))
@@ -71,7 +84,7 @@ namespace Fuckshit.Examples
                 fromHash = remoteAddress.GetHashCode();
 
                 // new connection?
-                if (newClientEP == null)
+                if (reusableSendEP == null)
                 {
                     // create a copy to remember the client EP for sending to it
 
@@ -90,9 +103,20 @@ namespace Fuckshit.Examples
                     // with the needed size form IPAddress.
                     IPEndPoint placeholder = new IPEndPoint(ipAddress, 0);
 
-                    // now create the actual IPEndPoint from remoteAddress.
-                    // only possible via EndPoint.Create().
-                    newClientEP = placeholder.Create(remoteAddress);
+                    // create an actual copy from RemoteAddress via .Create
+                    IPEndPoint actualCopy = (IPEndPoint)placeholder.Create(remoteAddress);
+
+                    // Serialize to create an actual copy of SocketAddress
+                    SocketAddress addressCopy = actualCopy.Serialize();
+
+                    // create an empty IPEndPointNonAlloc with correct address family
+                    reusableSendEP = new IPEndPointNonAlloc(ipAddress, 0);
+
+                    // set .temp which is returned by Serialize()
+                    reusableSendEP.temp = addressCopy;
+
+                    // IMPORTANT: newClientEP doesn't actually have the SocketAddress.
+                    //            only it's .temp has the correct SocketAddress.
                 }
 
                 // kcp needs the hashcode from the result too.
@@ -111,6 +135,8 @@ namespace Fuckshit.Examples
             {
                 ClientSend(message);
                 ServerPoll(out int _, out ArraySegment<byte> _);
+
+                ServerSend(message);
             }
         }
 

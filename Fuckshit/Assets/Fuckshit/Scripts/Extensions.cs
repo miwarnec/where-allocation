@@ -36,5 +36,21 @@ namespace Fuckshit
             EndPoint casted = remoteEndPoint;
             return socket.ReceiveFrom(buffer, ref casted);
         }
+
+        // SendTo allocates too:
+        // https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L2240
+        // -> the allocation is in EndPoint.Serialize()
+        // NOTE: technically this function isn't necessary. just pass IPEndPointNonAlloc.
+        public static int SendTo_NonAlloc(
+            this Socket socket,
+            byte[] buffer,
+            int offset,
+            int size,
+            SocketFlags socketFlags,
+            IPEndPointNonAlloc remoteEndPoint)
+        {
+            EndPoint casted = remoteEndPoint;
+            return socket.SendTo(buffer, offset, size, socketFlags, casted);
+        }
     }
 }
