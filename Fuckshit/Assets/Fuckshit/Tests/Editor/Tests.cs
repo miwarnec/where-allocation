@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace Fuckshit.Tests
 {
-    public class IPEndPointNonAllocTests : UdpTest
+    public class Tests : UdpTest
     {
         byte[] message = {0xAA, 0xBB};
         byte[] message2 = {0xCC, 0xDD};
