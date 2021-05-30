@@ -56,11 +56,14 @@ namespace Fuckshit.Examples
             if (serverSocket != null && serverSocket.Poll(0, SelectMode.SelectRead))
             {
                 // alloc
-                int msgLength = serverSocket.ReceiveFrom(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, ref newClientEP);
-                fromHash = newClientEP.GetHashCode();
+                //int msgLength = serverSocket.ReceiveFrom(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, ref newClientEP);
+                //fromHash = newClientEP.GetHashCode();
 
                 // nonalloc
-                //int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, out SocketAddress remoteAddress);
+                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, out SocketAddress remoteAddress);
+                // SocketAddress.GetHashCode hashes port + address without
+                // allocations!
+                fromHash = remoteAddress.GetHashCode();
 
                 // kcp needs the hashcode from the result too.
                 // which allocates. so let's test it as well.
