@@ -30,5 +30,13 @@ namespace Fuckshit
             int received = socket.ReceiveFrom(buffer, offset, size, socketFlags, ref casted);
             return received;
         }
+
+        // same as above, different parameters
+        public static int ReceiveFrom_NonAlloc(this Socket socket, byte[] buffer, IPEndPointNonAlloc remoteEndPoint)
+        {
+            EndPoint casted = remoteEndPoint;
+            int received = socket.ReceiveFrom(buffer, ref casted);
+            return received;
+        }
     }
 }
