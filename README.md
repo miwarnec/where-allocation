@@ -48,6 +48,10 @@ if (!connections.Contains(connectionId))
 connections[connectionId].OnMessage(message)
 ```
 
+# Remaining Allocations
+Socket.ReceiveFrom_Internal still allocates 90 bytes:
+https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1885
+
 # Showcase
 Fuckshit is used by:
 * [kcp2k](https://github.com/vis2k/kcp2k/)
