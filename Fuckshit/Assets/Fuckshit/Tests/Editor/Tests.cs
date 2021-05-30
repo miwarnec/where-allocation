@@ -52,6 +52,7 @@ namespace Fuckshit.Tests
             Assert.That(received.SequenceEqual(message2));
         }
 
+        // TODO flaky. only works when running by itself. not after the others.
         [Test]
         public void ServerToClient()
         {
