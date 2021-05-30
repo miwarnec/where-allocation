@@ -57,13 +57,13 @@ namespace Fuckshit.Examples
             {
                 // alloc
                 int msgLength = serverSocket.ReceiveFrom(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, ref newClientEP);
+                fromHash = newClientEP.GetHashCode();
 
                 // nonalloc
                 //int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, out SocketAddress remoteAddress);
 
                 // kcp needs the hashcode from the result too.
                 // which allocates. so let's test it as well.
-                fromHash = newClientEP.GetHashCode();
                 message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
                 return msgLength > 0;
             }
