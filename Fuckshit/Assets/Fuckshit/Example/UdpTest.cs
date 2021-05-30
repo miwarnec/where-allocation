@@ -47,6 +47,8 @@ namespace Fuckshit.Examples
         public void ClientSend(byte[] data)
         {
             // send and wait a little bit for it to be delivered
+            // NOTE: this does not allocate because it doesn't have the
+            //       IPEndPoint as last parameter, unlike ServerSend.
             clientSocket.Send(data, data.Length, SocketFlags.None);
             Thread.Sleep(100);
         }
