@@ -21,7 +21,7 @@ namespace Fuckshit
         public SocketAddress lastSocketAddress;
         public override EndPoint Create(SocketAddress socketAddress)
         {
-            Debug.LogWarning($"{nameof(IPEndPointNonAlloc)}.Create() hook");
+            //Debug.LogWarning($"{nameof(IPEndPointNonAlloc)}.Create() hook");
 
             // original IPEndPoint.Create validates:
             if (socketAddress.Family != AddressFamily)

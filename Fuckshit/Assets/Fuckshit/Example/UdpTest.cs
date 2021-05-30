@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 namespace Fuckshit.Examples
 {
@@ -22,7 +21,7 @@ namespace Fuckshit.Examples
 
         // send per UPDATE (easier to measure in profiler than per FixedUpdate)
         public int SendPerUpdate = 1;
-        byte[] message = new byte[]{0x01, 0x02, 0x03, 0x04};
+        byte[] message = {0x01, 0x02, 0x03, 0x04};
 
         void Start()
         {
@@ -58,7 +57,7 @@ namespace Fuckshit.Examples
             {
                 // get message
                 int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, out SocketAddress remoteAddress);
-                Debug.Log($"ServerPoll from {newClientEP}:  {BitConverter.ToString(receiveBuffer, 0, msgLength)}");
+                //Debug.Log($"ServerPoll from {newClientEP}:  {BitConverter.ToString(receiveBuffer, 0, msgLength)}");
                 //message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
                 // convert SocketAddress to EndPoint again, just for tests
                 //newClientEP = newClientEP.Create(remoteAddress);
