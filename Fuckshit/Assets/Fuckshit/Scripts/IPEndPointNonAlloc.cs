@@ -33,7 +33,7 @@ namespace Fuckshit
         //
         // IMPORTANT: remember that IPEndPointNonAlloc is always the same object
         //            and never changes. only the helper field is changed.
-        public readonly SocketAddress temp;
+        public SocketAddress temp;
 
         // constructors simply create the field once by calling the base method.
         // (our overwritten method would create anything new)
@@ -63,7 +63,76 @@ namespace Fuckshit
             // double check to guarantee that ReceiveFrom actually did write
             // into our 'temp' field. just in case that's ever changed.
             if (socketAddress != temp)
-                throw new Exception($"Socket.ReceiveFrom(): passed SocketAddress={socketAddress} but expected {temp}. This should never happen. Did ReceiveFrom() change?");
+            {
+                // well this is fun.
+                // in the latest mono from the above github links,
+                // the result of Serialize() is passed as 'ref' so ReceiveFrom
+                // does in fact write into it.
+                //
+                // in Unity 2019 LTS's mono version, it does create a new one
+                // each time. this is from ILSpy Receive_From:
+                //
+                //     SocketPal.CheckDualModeReceiveSupport(this);
+                //     ValidateBlockingMode();
+                //     if (NetEventSource.IsEnabled)
+                //     {
+                //         NetEventSource.Info(this, $"SRC{LocalEndPoint} size:{size} remoteEP:{remoteEP}", "ReceiveFrom");
+                //     }
+                //     EndPoint remoteEP2 = remoteEP;
+                //     System.Net.Internals.SocketAddress socketAddress = SnapshotAndSerialize(ref remoteEP2);
+                //     System.Net.Internals.SocketAddress socketAddress2 = IPEndPointExtensions.Serialize(remoteEP2);
+                //     int bytesTransferred;
+                //     SocketError socketError = SocketPal.ReceiveFrom(_handle, buffer, offset, size, socketFlags, socketAddress.Buffer, ref socketAddress.InternalSize, out bytesTransferred);
+                //     SocketException ex = null;
+                //     if (socketError != 0)
+                //     {
+                //         ex = new SocketException((int)socketError);
+                //         UpdateStatusAfterSocketError(ex);
+                //         if (NetEventSource.IsEnabled)
+                //         {
+                //             NetEventSource.Error(this, ex, "ReceiveFrom");
+                //         }
+                //         if (ex.SocketErrorCode != SocketError.MessageSize)
+                //         {
+                //             throw ex;
+                //         }
+                //     }
+                //     if (!socketAddress2.Equals(socketAddress))
+                //     {
+                //         try
+                //         {
+                //             remoteEP = remoteEP2.Create(socketAddress);
+                //         }
+                //         catch
+                //         {
+                //         }
+                //         if (_rightEndPoint == null)
+                //         {
+                //             _rightEndPoint = remoteEP2;
+                //         }
+                //     }
+                //     if (ex != null)
+                //     {
+                //         throw ex;
+                //     }
+                //     if (NetEventSource.IsEnabled)
+                //     {
+                //         NetEventSource.DumpBuffer(this, buffer, offset, size, "ReceiveFrom");
+                //         NetEventSource.Exit(this, bytesTransferred, "ReceiveFrom");
+                //     }
+                //     return bytesTransferred;
+                //
+
+                // so until they upgrade their mono version, we are stuck with
+                // some allocations.
+                //
+                // for now, let's pass the newly created on to our temp so at
+                // least we reuse it next time.
+                temp = socketAddress;
+
+                // in the future, enable this again:
+                //throw new Exception($"Socket.ReceiveFrom(): passed SocketAddress={socketAddress} but expected {temp}. This should never happen. Did ReceiveFrom() change?");
+            }
 
             // ReceiveFrom sets seed_endpoint to the result of Create():
             // https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1764
