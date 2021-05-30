@@ -52,6 +52,18 @@ namespace Fuckshit.Tests
             Assert.That(received.SequenceEqual(message2));
         }
 
+        [Test]
+        public void ServerToClient()
+        {
+            // send a message to server
+            ServerSend(message);
+
+            // poll with IPEndPointNonAlloc
+            bool result = ClientPoll(out ArraySegment<byte> received);
+            Assert.That(result, Is.True);
+            Assert.That(received.SequenceEqual(message));
+        }
+
         // see IPEndPointNonAlloc.Create:
         // we guarantee to throw an Exception if ReceiveFrom() is ever changed
         // to not pass the expected Serialize() SocketAddress back to Create()
@@ -61,7 +73,7 @@ namespace Fuckshit.Tests
             SocketAddress random = new SocketAddress(AddressFamily.InterNetwork);
 
             Assert.Throws<Exception>(() => {
-                reusableReceiveEP.Create(random);
+                serverReusableReceiveEp.Create(random);
             });
         }
 
@@ -71,8 +83,8 @@ namespace Fuckshit.Tests
         [Test]
         public void CreateReturnsSelf()
         {
-            EndPoint created = reusableReceiveEP.Create(reusableReceiveEP.temp);
-            Assert.That(created, Is.EqualTo(reusableReceiveEP));
+            EndPoint created = serverReusableReceiveEp.Create(serverReusableReceiveEp.temp);
+            Assert.That(created, Is.EqualTo(serverReusableReceiveEp));
         }
     }
 }

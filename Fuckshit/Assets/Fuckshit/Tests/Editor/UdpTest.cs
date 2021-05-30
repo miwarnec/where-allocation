@@ -15,22 +15,25 @@ namespace Fuckshit.Tests
 
         // server
         public Socket serverSocket;
-        public IPEndPointNonAlloc reusableReceiveEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
-        IPEndPointNonAlloc reusableSendEP; // true copy of the connected client's EP
+        public IPEndPointNonAlloc serverReusableReceiveEp;
+        public IPEndPointNonAlloc reusableSendEP; // true copy of the connected client's EP
 
         // client
-        public IPEndPoint clientRemoteEndPoint;
         public Socket clientSocket;
+        public IPEndPoint clientRemoteEndPoint;
+        public IPEndPointNonAlloc clientReusableReceiveEP;
 
         [SetUp]
         public void SetUp()
         {
             // create server
+            serverReusableReceiveEp = new IPEndPointNonAlloc(IPAddress.Any, 0);
             serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             serverSocket.Bind(new IPEndPoint(IPAddress.Any, Port));
 
             // create client
             clientRemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), Port);
+            clientReusableReceiveEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
             clientSocket = new Socket(clientRemoteEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             clientSocket.Connect(clientRemoteEndPoint);
             Thread.Sleep(100);
@@ -41,6 +44,13 @@ namespace Fuckshit.Tests
             // server should have something to poll now
             bool result = ServerPoll(out ArraySegment<byte> _);
             Assert.That(result, Is.True);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            serverSocket.Close();
+            clientSocket.Close();
         }
 
         public void ClientSend(byte[] data)
@@ -63,16 +73,30 @@ namespace Fuckshit.Tests
             Thread.Sleep(100);
         }
 
+        public bool ClientPoll(out ArraySegment<byte> message)
+        {
+            byte[] receiveBuffer = new byte[1200];
+
+            if (clientSocket != null && clientSocket.Poll(0, SelectMode.SelectRead))
+            {
+                int msgLength = clientSocket.ReceiveFrom_NonAlloc(receiveBuffer, clientReusableReceiveEP);
+                message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
+                return msgLength > 0;
+            }
+            message = default;
+            return false;
+        }
+
         public bool ServerPoll(out ArraySegment<byte> message)
         {
             byte[] receiveBuffer = new byte[1200];
             if (serverSocket != null && serverSocket.Poll(0, SelectMode.SelectRead))
             {
                 // get message
-                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, reusableReceiveEP);
-                Debug.Log($"ServerPoll from {reusableReceiveEP}:  {BitConverter.ToString(receiveBuffer, 0, msgLength)}");
+                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, serverReusableReceiveEp);
+                Debug.Log($"ServerPoll from {serverReusableReceiveEp}:  {BitConverter.ToString(receiveBuffer, 0, msgLength)}");
 
-                SocketAddress remoteAddress = reusableReceiveEP.temp;
+                SocketAddress remoteAddress = serverReusableReceiveEp.temp;
 
                 // new connection?
                 if (reusableSendEP == null)
@@ -114,13 +138,6 @@ namespace Fuckshit.Tests
                 return msgLength > 0;
             }
             return false;
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            serverSocket.Close();
-            clientSocket.Close();
         }
     }
 }
