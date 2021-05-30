@@ -23,7 +23,7 @@ As result, we get a **3.75x** reduction in allocations.
 ReceiveFromNonAlloc only allocates 90 byte:
 <img width="580" alt="ReceiveFrom_IPEndPointNonAlloc_ReceiveNonAlloc" src="https://user-images.githubusercontent.com/16416509/120093652-3ffbab80-c14e-11eb-93e9-0d350bead4fa.png">
 
-# Usage Guide (Pseudocode)
+# Usage Guide
 It's important to understand that ReceiveFrom_NonAlloc:
 - returns a SocketAddress, not an EndPoint
 - always writes into the **same** SocketAddress object
@@ -31,7 +31,7 @@ It's important to understand that ReceiveFrom_NonAlloc:
 In other words, you allocate your own IPEndPoint only **once** when adding the connection the first time.
 Afterwards, you can use the allocation free SocketAddress.GetHashCode() function to identify which connection the message is from.
 
-Server pseudcode:
+## Server Pseudcode:
 ```csharp
 // ReceiveFromNonAlloc always returns the same 'object'
 // with different internal values.
