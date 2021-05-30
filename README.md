@@ -49,5 +49,6 @@ connections[connectionId].OnMessage(message)
 ```
 
 # Showcase
-Used by [kcp2k](https://github.com/vis2k/kcp2k/)
-Used by [Mirror](https://github.com/vis2k/Mirror/)
+Fuckshit is used by:
+* [kcp2k](https://github.com/vis2k/kcp2k/)
+* [Mirror](https://github.com/vis2k/Mirror/)
