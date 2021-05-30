@@ -26,7 +26,7 @@ namespace Fuckshit
             // original IPEndPoint.Create validates:
             if (socketAddress.Family != AddressFamily)
                 throw new ArgumentException($"Unsupported socketAddress.AddressFamily: {socketAddress.Family}. Expected: {AddressFamily}");
-            if (socketAddress.Size<8)
+            if (socketAddress.Size < 8)
                 throw new ArgumentException($"Unsupported socketAddress.Size: {socketAddress.Size}. Expected: <8");
 
             // original IPEndPoint.Create calls this function, which is not
