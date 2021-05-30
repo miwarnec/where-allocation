@@ -39,7 +39,7 @@ namespace Fuckshit.Examples
             ClientSend(new byte[]{0x12, 0x34});
 
             // server should have something to poll now
-            bool result = ServerPoll();
+            bool result = ServerPoll(out int _, out ArraySegment<byte> _);
             if (!result)
                 Debug.LogError($"NOT CONNECTED!");
         }
@@ -51,7 +51,7 @@ namespace Fuckshit.Examples
             Thread.Sleep(100);
         }
 
-        public bool ServerPoll()
+        public bool ServerPoll(out int fromHash, out ArraySegment<byte> message)
         {
             if (serverSocket != null && serverSocket.Poll(0, SelectMode.SelectRead))
             {
@@ -67,10 +67,12 @@ namespace Fuckshit.Examples
 
                 // kcp needs the hashcode from the result too.
                 // which allocates. so let's test it as well.
-                int hash = newClientEP.GetHashCode();
-
+                fromHash = newClientEP.GetHashCode();
+                message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
                 return msgLength > 0;
             }
+            fromHash = 0;
+            message = default;
             return false;
         }
 
@@ -79,7 +81,7 @@ namespace Fuckshit.Examples
             for (int i = 0; i < SendPerUpdate; ++i)
             {
                 ClientSend(message);
-                ServerPoll();
+                ServerPoll(out int _, out ArraySegment<byte> _);
             }
         }
 
