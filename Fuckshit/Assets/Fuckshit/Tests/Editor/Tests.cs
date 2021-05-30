@@ -24,8 +24,7 @@ namespace Fuckshit.Tests
             ClientSend(message);
 
             // poll with IPEndPointNonAlloc
-            EndPoint newClientEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
-            bool result = ServerPoll(ref newClientEP, out ArraySegment<byte> received);
+            bool result = ServerPoll(out ArraySegment<byte> received);
             Assert.That(result, Is.True);
             Assert.That(received.SequenceEqual(message));
         }
@@ -38,8 +37,7 @@ namespace Fuckshit.Tests
             ClientSend(message);
 
             // poll with IPEndPointNonAlloc
-            EndPoint newClientEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
-            bool result = ServerPoll(ref newClientEP, out ArraySegment<byte> received);
+            bool result = ServerPoll(out ArraySegment<byte> received);
             Assert.That(result, Is.True);
             Assert.That(received.SequenceEqual(message));
 
@@ -48,8 +46,7 @@ namespace Fuckshit.Tests
             ClientSend(message2);
 
             // poll with IPEndPointNonAlloc
-            newClientEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
-            result = ServerPoll(ref newClientEP, out received);
+            result = ServerPoll(out received);
             Assert.That(result, Is.True);
             Assert.That(received.SequenceEqual(message2));
         }
@@ -59,10 +56,8 @@ namespace Fuckshit.Tests
         [Test]
         public void ReceiveFromNeverChangesCachedSerialization()
         {
-            EndPoint newClientEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
-
             // get original hash
-            int originalHash = ((IPEndPointNonAlloc)newClientEP).cache.GetHashCode();
+            int originalHash = newClientEP.cache.GetHashCode();
 
             // do it twice, just to be sure
             for (int i = 0; i < 2; ++i)
@@ -71,12 +66,12 @@ namespace Fuckshit.Tests
                 ClientSend(message);
 
                 // poll with IPEndPointNonAlloc
-                bool result = ServerPoll(ref newClientEP, out ArraySegment<byte> _);
+                bool result = ServerPoll(out ArraySegment<byte> _);
                 Assert.That(result, Is.True);
             }
 
             // check hash again
-            int hash = ((IPEndPointNonAlloc)newClientEP).cache.GetHashCode();
+            int hash = newClientEP.cache.GetHashCode();
             Assert.That(hash, Is.EqualTo(originalHash));
         }
     }

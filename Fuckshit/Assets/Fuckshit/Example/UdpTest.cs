@@ -12,7 +12,7 @@ namespace Fuckshit.Examples
 
         // server
         public Socket serverSocket;
-        EndPoint newClientEP = new IPEndPoint(IPAddress.Any, 0);
+        IPEndPointNonAlloc newClientEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
         byte[] receiveBuffer = new byte[1200];
 
         // client
@@ -60,10 +60,11 @@ namespace Fuckshit.Examples
                 //fromHash = newClientEP.GetHashCode();
 
                 // nonalloc
-                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, out SocketAddress remoteAddress);
+                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, newClientEP);
                 // SocketAddress.GetHashCode hashes port + address without
                 // allocations:
                 // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/SocketAddress.cs#L262
+                SocketAddress remoteAddress = newClientEP.temp;
                 fromHash = remoteAddress.GetHashCode();
 
                 // kcp needs the hashcode from the result too.

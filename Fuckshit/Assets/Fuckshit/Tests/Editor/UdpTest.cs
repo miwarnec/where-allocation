@@ -15,6 +15,7 @@ namespace Fuckshit.Tests
 
         // server
         public Socket serverSocket;
+        public IPEndPointNonAlloc newClientEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
 
         // client
         public IPEndPoint clientRemoteEndPoint;
@@ -37,8 +38,7 @@ namespace Fuckshit.Tests
             ClientSend(new byte[]{0x12, 0x34});
 
             // server should have something to poll now
-            EndPoint newClientEP = new IPEndPoint(IPAddress.Any, 0);
-            bool result = ServerPoll(ref newClientEP, out ArraySegment<byte> _);
+            bool result = ServerPoll(out ArraySegment<byte> _);
             Assert.That(result, Is.True);
         }
 
@@ -49,17 +49,15 @@ namespace Fuckshit.Tests
             Thread.Sleep(100);
         }
 
-        public bool ServerPoll(ref EndPoint newClientEP, out ArraySegment<byte> message)
+        public bool ServerPoll(out ArraySegment<byte> message)
         {
             byte[] receiveBuffer = new byte[1200];
             if (serverSocket != null && serverSocket.Poll(0, SelectMode.SelectRead))
             {
                 // get message
-                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, out SocketAddress remoteAddress);
+                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, newClientEP);
                 Debug.Log($"ServerPoll from {newClientEP}:  {BitConverter.ToString(receiveBuffer, 0, msgLength)}");
                 message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
-                // convert SocketAddress to EndPoint again, just for tests
-                newClientEP = newClientEP.Create(remoteAddress);
                 return msgLength > 0;
             }
             return false;

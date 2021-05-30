@@ -19,7 +19,7 @@ namespace Fuckshit
         //    original cached SocketAddress above.
         // -> this copy is always equal to the last ReceiveFrom's remote
         //    SocketAddress
-        internal readonly SocketAddress temp;
+        public readonly SocketAddress temp;
 
         // IPEndPoint.Serialize allocates a new SocketAddress each time:
         // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPEndPoint.cs#L128
