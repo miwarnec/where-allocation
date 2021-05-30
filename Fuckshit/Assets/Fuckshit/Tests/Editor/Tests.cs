@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using NUnit.Framework;
 
 namespace Fuckshit.Tests
@@ -51,28 +52,27 @@ namespace Fuckshit.Tests
             Assert.That(received.SequenceEqual(message2));
         }
 
-        // need to guarantee that ReceiveFrom never overwrites the original
-        // cached serialization
+        // see IPEndPointNonAlloc.Create:
+        // we guarantee to throw an Exception if ReceiveFrom() is ever changed
+        // to not pass the expected Serialize() SocketAddress back to Create()
         [Test]
-        public void ReceiveFromNeverChangesCachedSerialization()
+        public void CreateCatchesUnknownSocketAddressObject()
         {
-            // get original hash
-            int originalHash = newClientEP.cache.GetHashCode();
+            SocketAddress random = new SocketAddress(AddressFamily.InterNetwork);
 
-            // do it twice, just to be sure
-            for (int i = 0; i < 2; ++i)
-            {
-                // send a message to server
-                ClientSend(message);
+            Assert.Throws<Exception>(() => {
+                newClientEP.Create(random);
+            });
+        }
 
-                // poll with IPEndPointNonAlloc
-                bool result = ServerPoll(out ArraySegment<byte> _);
-                Assert.That(result, Is.True);
-            }
-
-            // check hash again
-            int hash = newClientEP.cache.GetHashCode();
-            Assert.That(hash, Is.EqualTo(originalHash));
+        // see IPEndPointNonAlloc.Create:
+        // we always need to return _something_ != null so that ReceiveFrom can
+        // set seed_endpoint.
+        [Test]
+        public void CreateReturnsSelf()
+        {
+            EndPoint created = newClientEP.Create(newClientEP.temp);
+            Assert.That(created, Is.EqualTo(newClientEP));
         }
     }
 }

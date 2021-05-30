@@ -5,90 +5,70 @@ namespace Fuckshit
 {
     public class IPEndPointNonAlloc : IPEndPoint
     {
-        // ReceiveFrom calls remoteEndPoint.Serialize at first:
-        // https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1733
-        // -> this creates a new SocketAddress each time, which allocates.
-        // -> instead, serialize only once in constructor
-        // IMPORTANT: DO NOT MODIFY
-        // -> internal so tests can validate that it's never changed
-        internal readonly SocketAddress cache;
-
-        // ReceiveFrom passes the serialized SocketAddress into ReceiveFrom_Internal,
-        // which then writes the remote end's SocketAddress into it.
-        // -> we need a worker copy to write into, without ever modifying our
-        //    original cached SocketAddress above.
-        // -> this copy is always equal to the last ReceiveFrom's remote
-        //    SocketAddress
+        // Two steps to remove most of the allocations in ReceiveFrom_Internal:
+        //
+        // 1.) remoteEndPoint.Serialize():
+        //     https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1733
+        //     -> creates an EndPoint for ReceiveFrom_Internal to write into
+        //     -> it's never read from:
+        //        ReceiveFrom_Internal passes it to native:
+        //          https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1885
+        //        native recv populates 'sockaddr* from' with the remote address:
+        //          https://docs.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-recvfrom
+        //     -> can NOT be null. bricks both Unity and Unity Hub otherwise.
+        //     -> it seems as if Serialize() is only called to avoid allocating
+        //        a 'new SocketAddress' in ReceiveFrom. it's up to the EndPoint.
+        //
+        // 2.) EndPoint.Create(SocketAddress):
+        //     https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1761
+        //     -> SocketAddress is the remote's address that we want to return
+        //     -> to avoid 'new EndPoint(SocketAddress), it seems up to the user
+        //        to decide how to create a new EndPoint via .Create
+        //     -> SocketAddress is the object that was returned by Serialize()
+        //
+        // in other words, all we need is an extra SocketAddress field that we
+        // can pass to ReceiveFrom_Internal to write the result into.
+        // => callers can then get the result from the extra field!
+        // => no allocations
+        //
+        // IMPORTANT: remember that IPEndPointNonAlloc is always the same object
+        //            and never changes. only the helper field is changed.
         public readonly SocketAddress temp;
 
-        // IPEndPoint.Serialize allocates a new SocketAddress each time:
-        // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPEndPoint.cs#L128
-        //
-        // we can't do it manually because the SocketAddress ctor is internal:
-        //   serialized = new SocketAddress(Address, Port);
-        //
-        // BUT we can still call the base Serialize function:
-        // (which does NOT call our overwritten one)
+        // constructors simply create the field once by calling the base method.
+        // (our overwritten method would create anything new)
         public IPEndPointNonAlloc(long address, int port) : base(address, port)
         {
-            cache = base.Serialize();
             temp = base.Serialize();
         }
         public IPEndPointNonAlloc(IPAddress address, int port) : base(address, port)
         {
-            cache = base.Serialize();
             temp = base.Serialize();
         }
 
-        // as explained above, we want to cache the Serialization.
-        // but we CAN NOT return the original cache because ReceiveFrom_Internal
-        // writes into it.
-        // => manually copy our cache to the temporary one.
-        // => and return it so ReceiveFrom_Internal can write into it here:
-        //    https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1739
-        public override SocketAddress Serialize()
-        {
-            // copy all the fields:
-            //   internal int m_Size;
-            //   internal byte[] m_Buffer;
+        // Serialize simply returns it
+        public override SocketAddress Serialize() => temp;
 
-            // for now, let's only handle the same size
-            if (temp.Size == cache.Size)
-            {
-                // copy buffer from cache to temp
-                for (int i = 0; i < cache.Size; ++i)
-                    temp[i] = cache[i];
-
-                // return temp (which will be modified)
-                return temp;
-            }
-            // NOTE: different size should not really happen, because .Create()
-            //       compares the AddressFamily below?
-            // TODO create a new one in those cases?
-            // TODO if ReceiveFrom ever modifies size, then cache that one too
-            //      and reuse it?
-            throw new Exception($"IPEndPointNonAlloc.Serialize: size mismatch. cache.Size={cache.Size} temp.Size={temp.Size}. Can't copy.");
-        }
-
-        // ReceiveFrom calls EndPoint.Create(), which allocates:
-        // https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1761
-        // because it creates a new IPEndPoint from the SocketAddress.
-        // -> SocketAddress is exactly the one returned by Serialize() above
-        // -> which means it's always 'this.temp'
-        // -> simply do nothing. return self.
-        // => Extensions.ReceiveFromNonAlloc will take the SocketAddress from
-        //    'temp'.
+        // Create doesn't need to create anything.
+        // SocketAddress object is already the one we returned in Serialize().
+        // ReceiveFrom_Internal simply wrote into it.
         public override EndPoint Create(SocketAddress socketAddress)
         {
-            //Debug.LogWarning($"{nameof(IPEndPointNonAlloc)}.Create() hook");
-
             // original IPEndPoint.Create validates:
             if (socketAddress.Family != AddressFamily)
                 throw new ArgumentException($"Unsupported socketAddress.AddressFamily: {socketAddress.Family}. Expected: {AddressFamily}");
             if (socketAddress.Size < 8)
                 throw new ArgumentException($"Unsupported socketAddress.Size: {socketAddress.Size}. Expected: <8");
 
-            // do nothing
+            // double check to guarantee that ReceiveFrom actually did write
+            // into our 'temp' field. just in case that's ever changed.
+            if (socketAddress != temp)
+                throw new Exception($"Socket.ReceiveFrom(): passed SocketAddress={socketAddress} but expected {temp}. This should never happen. Did ReceiveFrom() change?");
+
+            // ReceiveFrom sets seed_endpoint to the result of Create():
+            // https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1764
+            // so let's return ourselves at least.
+            // (seed_endpoint only seems to matter for BeginSend etc.)
             return this;
         }
     }
