@@ -1,5 +1,5 @@
 # Fuckshit
-**_Nearly_** allocation free C# Socket.ReceiveFrom**NonAlloc**.
+**_Nearly_** allocation free C# Socket.ReceiveFrom**NonAlloc** for multiplayer C# games, by vis2k.
 
 # ReceiveFrom Allocations
 C#'s Socket.ReceiveFrom has heavy allocations (338 byte):
