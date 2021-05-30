@@ -12,7 +12,8 @@ namespace Fuckshit.Examples
 
         // server
         public Socket serverSocket;
-        IPEndPointNonAlloc newClientEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
+        IPEndPointNonAlloc reusableEP = new IPEndPointNonAlloc(IPAddress.Any, 0); // for reading only
+        EndPoint newClientEP; // true copy of the connected client's EP
         byte[] receiveBuffer = new byte[1200];
 
         // client
@@ -62,12 +63,37 @@ namespace Fuckshit.Examples
                 //fromHash = newClientEP.GetHashCode();
 
                 // nonalloc
-                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, newClientEP);
+                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, reusableEP);
                 // SocketAddress.GetHashCode hashes port + address without
                 // allocations:
                 // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/SocketAddress.cs#L262
-                SocketAddress remoteAddress = newClientEP.temp;
+                SocketAddress remoteAddress = reusableEP.temp;
                 fromHash = remoteAddress.GetHashCode();
+
+                // new connection?
+                if (newClientEP == null)
+                {
+                    // create a copy to remember the client EP for sending to it
+
+                    // allocate a placeholder IPAddress to copy
+                    // our SocketAddress into.
+                    // -> needs to be the same address family.
+                    IPAddress ipAddress;
+                    if (remoteAddress.Family == AddressFamily.InterNetworkV6)
+                        ipAddress = IPAddress.IPv6Any;
+                    else if (remoteAddress.Family == AddressFamily.InterNetwork)
+                        ipAddress = IPAddress.Any;
+                    else
+                        throw new Exception($"Unexpected SocketAddress family: {remoteAddress.Family}");
+
+                    // allocate a playerholder IPEndPoint.
+                    // with the needed size form IPAddress.
+                    IPEndPoint placeholder = new IPEndPoint(ipAddress, 0);
+
+                    // now create the actual IPEndPoint from remoteAddress.
+                    // only possible via EndPoint.Create().
+                    newClientEP = placeholder.Create(remoteAddress);
+                }
 
                 // kcp needs the hashcode from the result too.
                 // which allocates. so let's test it as well.
