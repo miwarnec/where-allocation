@@ -12,7 +12,7 @@ namespace Fuckshit.Examples
 
         // server
         public Socket serverSocket;
-        IPEndPointNonAlloc reusableRecvEP = new IPEndPointNonAlloc(IPAddress.Any, 0); // for reading only
+        IPEndPointNonAlloc reusableReceiveEP = new IPEndPointNonAlloc(IPAddress.Any, 0); // for reading only
         IPEndPointNonAlloc reusableSendEP; // true copy of the connected client's EP
         byte[] receiveBuffer = new byte[1200];
 
@@ -76,11 +76,11 @@ namespace Fuckshit.Examples
                 //fromHash = newClientEP.GetHashCode();
 
                 // nonalloc
-                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, reusableRecvEP);
+                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, reusableReceiveEP);
                 // SocketAddress.GetHashCode hashes port + address without
                 // allocations:
                 // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/SocketAddress.cs#L262
-                SocketAddress remoteAddress = reusableRecvEP.temp;
+                SocketAddress remoteAddress = reusableReceiveEP.temp;
                 fromHash = remoteAddress.GetHashCode();
 
                 // new connection?
