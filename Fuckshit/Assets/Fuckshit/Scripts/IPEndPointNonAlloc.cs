@@ -13,6 +13,14 @@ namespace Fuckshit
         // -> internal so tests can validate that it's never changed
         internal readonly SocketAddress cache;
 
+        // ReceiveFrom passes the serialized SocketAddress into ReceiveFrom_Internal,
+        // which then writes the remote end's SocketAddress into it.
+        // -> we need a worker copy to write into, without ever modifying our
+        //    original cached SocketAddress above.
+        // -> this copy is always equal to the last ReceiveFrom's remote
+        //    SocketAddress
+        internal readonly SocketAddress temp;
+
         // IPEndPoint.Serialize allocates a new SocketAddress each time:
         // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPEndPoint.cs#L128
         //
@@ -24,21 +32,52 @@ namespace Fuckshit
         public IPEndPointNonAlloc(long address, int port) : base(address, port)
         {
             cache = base.Serialize();
+            temp = base.Serialize();
         }
         public IPEndPointNonAlloc(IPAddress address, int port) : base(address, port)
         {
             cache = base.Serialize();
+            temp = base.Serialize();
         }
 
-        // ReceiveFrom calls EndPoint.Create():
+        // as explained above, we want to cache the Serialization.
+        // but we CAN NOT return the original cache because ReceiveFrom_Internal
+        // writes into it.
+        // => manually copy our cache to the temporary one.
+        // => and return it so ReceiveFrom_Internal can write into it here:
+        //    https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1739
+        public override SocketAddress Serialize()
+        {
+            // copy all the fields:
+            //   internal int m_Size;
+            //   internal byte[] m_Buffer;
+
+            // for now, let's only handle the same size
+            if (temp.Size == cache.Size)
+            {
+                // copy buffer from cache to temp
+                for (int i = 0; i < cache.Size; ++i)
+                    temp[i] = cache[i];
+
+                // return temp (which will be modified)
+                return temp;
+            }
+            // NOTE: different size should not really happen, because .Create()
+            //       compares the AddressFamily below?
+            // TODO create a new one in those cases?
+            // TODO if ReceiveFrom ever modifies size, then cache that one too
+            //      and reuse it?
+            throw new Exception($"IPEndPointNonAlloc.Serialize: size mismatch. cache.Size={cache.Size} temp.Size={temp.Size}. Can't copy.");
+        }
+
+        // ReceiveFrom calls EndPoint.Create(), which allocates:
         // https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1761
-        //
-        // we pass an IPEndPoint to ReceiveFrom.
-        // IPEndPoint.Create allocates:
-        // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPEndPoint.cs#L136
-        //
-        // let's overwrite for a version that does not allocate
-        public SocketAddress lastSocketAddress;
+        // because it creates a new IPEndPoint from the SocketAddress.
+        // -> SocketAddress is exactly the one returned by Serialize() above
+        // -> which means it's always 'this.temp'
+        // -> simply do nothing. return self.
+        // => Extensions.ReceiveFromNonAlloc will take the SocketAddress from
+        //    'temp'.
         public override EndPoint Create(SocketAddress socketAddress)
         {
             //Debug.LogWarning($"{nameof(IPEndPointNonAlloc)}.Create() hook");
@@ -49,48 +88,8 @@ namespace Fuckshit
             if (socketAddress.Size < 8)
                 throw new ArgumentException($"Unsupported socketAddress.Size: {socketAddress.Size}. Expected: <8");
 
-            // original IPEndPoint.Create calls this function, which is not
-            // available when trying to call it here:
-            //     return socketAddress.GetIPEndPoint();
-            //
-            // using ILSpy we can see SocketAddress.GetIPEndPoint() in Unity:
-            //     internal IPEndPoint GetIPEndPoint()
-            //     {
-            //         IPAddress iPAddress = GetIPAddress();
-            //         int port = SocketAddressPal.GetPort(Buffer);
-            //         return new IPEndPoint(iPAddress, port);
-            //     }
-
-            // let's store the socketAddress and return ourselves instead.
-            lastSocketAddress = socketAddress;
+            // do nothing
             return this;
         }
-
-        // ReceiveFrom calls remoteEndPoint.Serialize at first:
-        // https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1733
-        // -> in kcp2k, it's for the initially created new IPEndPoint(IPAddress.Any, 0)
-        // -> it's NOT the last received serialized IPEndPoint!
-        // => so to avoid allocations, simply
-
-        // -> our Create() never applies the received SocketAddress to the
-        //    IPEndPoint. we only store it in a field.
-        // -> Serialize() is expected to return the last SocketAddress.
-        // -> which we have in .lastSocketAddress, so let's just return it.
-        // TODO that's not safe. we need to serialize the original one.
-        //      see CacheSerialization() above!
-        /*public override SocketAddress Serialize()
-        {
-            // if ReceiveFrom hasn't set a lastSocketAddress yet, then call
-            // IPEndPoint.Serialize() for the original IPEndPoint, just like
-            // ReceiveFrom() does it.
-            if (lastSocketAddress == null)
-                return base.Serialize();
-
-            // otherwise return the saved one from last receive.
-            // this is safe, because IPEndPoint.Serialize()
-            // simply returns a new SocketAddress(address, port):
-            // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPEndPoint.cs#L128
-            return lastSocketAddress;
-        }*/
     }
 }
