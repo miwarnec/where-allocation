@@ -60,6 +60,9 @@ namespace Fuckshit
                 return base.Serialize();
 
             // otherwise return the saved one from last receive.
+            // this is safe, because IPEndPoint.Serialize()
+            // simply returns a new SocketAddress(address, port):
+            // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPEndPoint.cs#L128
             return lastSocketAddress;
         }
     }
