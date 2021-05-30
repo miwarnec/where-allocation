@@ -44,14 +44,18 @@ namespace Fuckshit
             return this;
         }
 
-        // ReceiveFrom calls remoteEndPoint.Serialize to get the SocketAddress
-        // at first:
+        // ReceiveFrom calls remoteEndPoint.Serialize at first:
         // https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1733
+        // -> in kcp2k, it's for the initially created new IPEndPoint(IPAddress.Any, 0)
+        // -> it's NOT the last received serialized IPEndPoint!
+        // => so to avoid allocations, simply
+
         // -> our Create() never applies the received SocketAddress to the
         //    IPEndPoint. we only store it in a field.
         // -> Serialize() is expected to return the last SocketAddress.
         // -> which we have in .lastSocketAddress, so let's just return it.
-        public override SocketAddress Serialize()
+        // TODO that's not safe
+        /*public override SocketAddress Serialize()
         {
             // if ReceiveFrom hasn't set a lastSocketAddress yet, then call
             // IPEndPoint.Serialize() for the original IPEndPoint, just like
@@ -64,6 +68,6 @@ namespace Fuckshit
             // simply returns a new SocketAddress(address, port):
             // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPEndPoint.cs#L128
             return lastSocketAddress;
-        }
+        }*/
     }
 }
