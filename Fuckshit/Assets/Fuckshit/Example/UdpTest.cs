@@ -61,7 +61,7 @@ namespace Fuckshit.Examples
                 //message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
                 // convert SocketAddress to EndPoint again, just for tests
                 //newClientEP = newClientEP.Create(remoteAddress);
-                return true;
+                return msgLength > 0;
             }
             return false;
         }
