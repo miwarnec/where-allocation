@@ -1,14 +1,12 @@
 using System;
 using System.Net;
-using JetBrains.Annotations;
-using UnityEngine;
 
 namespace Fuckshit
 {
     public class IPEndPointNonAlloc : IPEndPoint
     {
         public IPEndPointNonAlloc(long address, int port) : base(address, port) {}
-        public IPEndPointNonAlloc([NotNull] IPAddress address, int port) : base(address, port) {}
+        public IPEndPointNonAlloc(IPAddress address, int port) : base(address, port) {}
 
         // ReceiveFrom calls EndPoint.Create():
         // https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1761
