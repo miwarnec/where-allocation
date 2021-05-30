@@ -40,7 +40,9 @@ namespace Fuckshit
         // SendTo allocates too:
         // https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L2240
         // -> the allocation is in EndPoint.Serialize()
-        // NOTE: technically this function isn't necessary. just pass IPEndPointNonAlloc.
+        // NOTE: technically this function isn't necessary.
+        //       could just pass IPEndPointNonAlloc.
+        //       still good for strong typing.
         public static int SendTo_NonAlloc(
             this Socket socket,
             byte[] buffer,
