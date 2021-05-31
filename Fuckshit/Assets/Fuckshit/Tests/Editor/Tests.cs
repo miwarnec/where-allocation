@@ -101,6 +101,17 @@ namespace Fuckshit.Tests
             Assert.That(created, Is.EqualTo(serverReusableReceiveEP));
         }
 
+        // make sure that GetHashCode works for our custom class.
+        // there are issues where SocketAddress has values, but m_changed is
+        // false and so HashCode is never calculated.
+        [Test]
+        public void GetHashCodeTest()
+        {
+            IPAddress address = IPAddress.Parse("127.0.0.1");
+            IPEndPointNonAlloc endPoint = new IPEndPointNonAlloc(address, 1337);
+            Assert.That(endPoint.GetHashCode(), Is.EqualTo(16778566));
+        }
+
         // need a way to create a real, valid IPEndPoint from our NonAlloc class
         [Test]
         public void DeepCopyIPEndPoint()
