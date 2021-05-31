@@ -123,6 +123,20 @@ namespace Fuckshit.Tests
             Assert.That(endPoint.temp.GetHashCode(), Is.EqualTo(939851901));
         }
 
+        // by default, SocketAddress.GetHashCode() returns 0 after usage in
+        // ReceiveFrom_NonAlloc because m_changed is false and so HashCode is
+        // never calculated.
+        [Test]
+        public void GetHashCodeTest_AfterReceiveFrom()
+        {
+            // send something and then poll once
+            ClientSend(message);
+            bool polled = ServerPoll(out int _, out ArraySegment<byte> _);
+            Assert.That(polled, Is.True);
+
+            Assert.That(serverReusableReceiveEP.temp.GetHashCode(), !Is.EqualTo(0));
+        }
+
         // need a way to create a real, valid IPEndPoint from our NonAlloc class
         [Test]
         public void DeepCopyIPEndPoint()
