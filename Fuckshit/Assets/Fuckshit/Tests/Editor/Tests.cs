@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using NUnit.Framework;
+using Fuckshit.Examples;
 
 namespace Fuckshit.Tests
 {
@@ -10,6 +11,18 @@ namespace Fuckshit.Tests
     {
         byte[] message = {0xAA, 0xBB};
         byte[] message2 = {0xCC, 0xDD};
+
+        [SetUp]
+        public void SetUp()
+        {
+            Initialize();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Shutdown();
+        }
 
         // simply try to create one
         [Test]
@@ -25,7 +38,7 @@ namespace Fuckshit.Tests
             ClientSend(message);
 
             // poll with IPEndPointNonAlloc
-            bool result = ServerPoll(out ArraySegment<byte> received);
+            bool result = ServerPoll(out int _, out ArraySegment<byte> received);
             Assert.That(result, Is.True);
             Assert.That(received.SequenceEqual(message));
         }
@@ -38,7 +51,7 @@ namespace Fuckshit.Tests
             ClientSend(message);
 
             // poll with IPEndPointNonAlloc
-            bool result = ServerPoll(out ArraySegment<byte> received);
+            bool result = ServerPoll(out int _, out ArraySegment<byte> received);
             Assert.That(result, Is.True);
             Assert.That(received.SequenceEqual(message));
 
@@ -47,7 +60,7 @@ namespace Fuckshit.Tests
             ClientSend(message2);
 
             // poll with IPEndPointNonAlloc
-            result = ServerPoll(out received);
+            result = ServerPoll(out int _, out received);
             Assert.That(result, Is.True);
             Assert.That(received.SequenceEqual(message2));
         }
@@ -74,7 +87,7 @@ namespace Fuckshit.Tests
             SocketAddress random = new SocketAddress(AddressFamily.InterNetwork);
 
             Assert.Throws<Exception>(() => {
-                serverReusableReceiveEp.Create(random);
+                serverReusableReceiveEP.Create(random);
             });
         }
 
@@ -84,8 +97,8 @@ namespace Fuckshit.Tests
         [Test]
         public void CreateReturnsSelf()
         {
-            EndPoint created = serverReusableReceiveEp.Create(serverReusableReceiveEp.temp);
-            Assert.That(created, Is.EqualTo(serverReusableReceiveEp));
+            EndPoint created = serverReusableReceiveEP.Create(serverReusableReceiveEP.temp);
+            Assert.That(created, Is.EqualTo(serverReusableReceiveEP));
         }
     }
 }

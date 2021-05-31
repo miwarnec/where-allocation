@@ -12,22 +12,28 @@ namespace Fuckshit.Examples
 
         // server
         public Socket serverSocket;
-        IPEndPointNonAlloc reusableReceiveEP = new IPEndPointNonAlloc(IPAddress.Any, 0); // for reading only
-        IPEndPointNonAlloc reusableSendEP; // true copy of the connected client's EP
-        byte[] receiveBuffer = new byte[1200];
+        public IPEndPointNonAlloc serverReusableReceiveEP; // for reading only
+        public IPEndPointNonAlloc serverReusableSendEP; // true copy of the connected client's EP
+        byte[] receiveBuffer;
 
         // client
         public IPEndPoint clientRemoteEndPoint;
         public Socket clientSocket;
+        public IPEndPointNonAlloc clientReusableReceiveEP;
 
         public void Initialize()
         {
+            // create buffer
+            receiveBuffer = new byte[1200];
+
             // create server
+            serverReusableReceiveEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
             serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             serverSocket.Bind(new IPEndPoint(IPAddress.Any, Port));
 
             // create client
             clientRemoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), Port);
+            clientReusableReceiveEP = new IPEndPointNonAlloc(IPAddress.Any, 0);
             clientSocket = new Socket(clientRemoteEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             clientSocket.Connect(clientRemoteEndPoint);
             Thread.Sleep(100);
@@ -39,6 +45,12 @@ namespace Fuckshit.Examples
             bool result = ServerPoll(out int _, out ArraySegment<byte> _);
             if (!result)
                 Debug.LogError($"NOT CONNECTED!");
+        }
+
+        public void Shutdown()
+        {
+            serverSocket.Close();
+            clientSocket.Close();
         }
 
         public void ClientSend(byte[] data)
@@ -59,8 +71,20 @@ namespace Fuckshit.Examples
             // which EP to use?
             // IPEndPointNonAlloc caches Serializes just fine.
             // just need to use an actual one with the correct SocketAddress etc.
-            serverSocket.SendTo_NonAlloc(data, 0, data.Length, SocketFlags.None, reusableSendEP);
+            serverSocket.SendTo_NonAlloc(data, 0, data.Length, SocketFlags.None, serverReusableSendEP);
             Thread.Sleep(100);
+        }
+
+        public bool ClientPoll(out ArraySegment<byte> message)
+        {
+            if (clientSocket != null && clientSocket.Poll(0, SelectMode.SelectRead))
+            {
+                int msgLength = clientSocket.ReceiveFrom_NonAlloc(receiveBuffer, clientReusableReceiveEP);
+                message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
+                return msgLength > 0;
+            }
+            message = default;
+            return false;
         }
 
         public bool ServerPoll(out int fromHash, out ArraySegment<byte> message)
@@ -72,15 +96,15 @@ namespace Fuckshit.Examples
                 //fromHash = newClientEP.GetHashCode();
 
                 // nonalloc
-                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, reusableReceiveEP);
+                int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, serverReusableReceiveEP);
                 // SocketAddress.GetHashCode hashes port + address without
                 // allocations:
                 // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/SocketAddress.cs#L262
-                SocketAddress remoteAddress = reusableReceiveEP.temp;
+                SocketAddress remoteAddress = serverReusableReceiveEP.temp;
                 fromHash = remoteAddress.GetHashCode();
 
                 // new connection?
-                if (reusableSendEP == null)
+                if (serverReusableSendEP == null)
                 {
                     // create a copy to remember the client EP for sending to it
 
@@ -106,10 +130,10 @@ namespace Fuckshit.Examples
                     SocketAddress addressCopy = actualCopy.Serialize();
 
                     // create an empty IPEndPointNonAlloc with correct address family
-                    reusableSendEP = new IPEndPointNonAlloc(ipAddress, 0);
+                    serverReusableSendEP = new IPEndPointNonAlloc(ipAddress, 0);
 
                     // set .temp which is returned by Serialize()
-                    reusableSendEP.temp = addressCopy;
+                    serverReusableSendEP.temp = addressCopy;
 
                     // IMPORTANT: newClientEP doesn't actually have the SocketAddress.
                     //            only it's .temp has the correct SocketAddress.
