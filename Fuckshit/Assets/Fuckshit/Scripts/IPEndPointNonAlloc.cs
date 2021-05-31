@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Net.Sockets;
 
 namespace Fuckshit
 {
@@ -139,6 +140,35 @@ namespace Fuckshit
             // so let's return ourselves at least.
             // (seed_endpoint only seems to matter for BeginSend etc.)
             return this;
+        }
+
+        // helper function to create an ACTUAL new IPEndPoint from this.
+        // server needs it to store new connections as unique IPEndPoints.
+        public IPEndPoint DeepCopyIPEndPoint()
+        {
+            // we need to create a new IPEndPoint from 'temp' SocketAddress.
+            // there is no 'new IPEndPoint(SocketAddress) constructor.
+            // so we need to be a bit creative...
+
+            // allocate a placeholder IPAddress to copy
+            // our SocketAddress into.
+            // -> needs to be the same address family.
+            IPAddress ipAddress;
+            if (temp.Family == AddressFamily.InterNetworkV6)
+                ipAddress = IPAddress.IPv6Any;
+            else if (temp.Family == AddressFamily.InterNetwork)
+                ipAddress = IPAddress.Any;
+            else
+                throw new Exception($"Unexpected SocketAddress family: {temp.Family}");
+
+            // allocate a placeholder IPEndPoint
+            // with the needed size form IPAddress.
+            // (the real class. not NonAlloc)
+            IPEndPoint placeholder = new IPEndPoint(ipAddress, 0);
+
+            // the real IPEndPoint's .Create function can create a new IPEndPoint
+            // copy from a SocketAddress.
+            return (IPEndPoint)placeholder.Create(temp);
         }
     }
 }

@@ -100,5 +100,15 @@ namespace Fuckshit.Tests
             EndPoint created = serverReusableReceiveEP.Create(serverReusableReceiveEP.temp);
             Assert.That(created, Is.EqualTo(serverReusableReceiveEP));
         }
+
+        // need a way to create a real, valid IPEndPoint from our NonAlloc class
+        [Test]
+        public void DeepCopyIPEndPoint()
+        {
+            IPEndPoint realEP = serverReusableReceiveEP.DeepCopyIPEndPoint();
+
+            // check if it's a true copy
+            Assert.That(realEP, !Is.EqualTo(serverReusableReceiveEP));
+        }
     }
 }
