@@ -109,6 +109,12 @@ namespace Fuckshit.Tests
 
             // check if it's a true copy
             Assert.That(realEP, !Is.EqualTo(serverReusableReceiveEP));
+
+            // check if the endpoint's SocketAddress is as expected
+            int beforeHash = serverReusableReceiveEP.temp.GetHashCode();
+            SocketAddress serialized = realEP.Serialize();
+            int afterHash = realEP.Serialize().GetHashCode();
+            Assert.That(beforeHash, Is.EqualTo(afterHash));
         }
     }
 }
