@@ -31,17 +31,34 @@ With Fuckshit, it's reduced to **364 B**:
 **=> 25x reduction** in allocations/GC!<br/>
 
 # Usage Guide
-See the example folder or [kcp2k](https://github.com/vis2k/kcp2k/).
+See the **Example** folder or [kcp2k](https://github.com/vis2k/kcp2k/).
 
 * Use IPEndPointNonAlloc
 * Use ReceiveFrom_NonAlloc
 * Use SendTo_NonAlloc
+* Use IPEndPointNonAlloc.DeepCopyIPEndPoint() to create an actual copy (once per new connection)
 
-Keep in mind that IPEndPointNonAlloc is **not** a true IPEndPoint!
-* It holds the SocketAddress in **.temp**
-* It's reused over and over again. Don't store it as EndPoint for new connections.
-  * Use IPEndPointNonAlloc.DeepCopyIPEndPoint() to create a true IPEndPoint copy
-  * Do that only once for new connections
+Here is how the server polls, from the **Example**:
+```csharp
+// nonalloc ReceiveFrom
+int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, serverReusableReceiveEP);
+
+// new connection?
+if (newClientEP == null)
+{
+    // IPEndPointNonAlloc is reused all the time.
+    // we can't store that as the connection's endpoint.
+    // we need a new copy!
+    newClientEP = serverReusableReceiveEP.DeepCopyIPEndPoint();
+
+    // for allocation free sending, we also need another
+    // IPEndPointNonAlloc.
+    serverReusableSendEP = new IPEndPointNonAlloc(newClientEP.Address, newClientEP.Port);
+}
+
+// process the message...
+message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
+```
 
 # Showcase
 Fuckshit is used by:
