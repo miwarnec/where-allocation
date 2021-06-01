@@ -28,8 +28,7 @@ With Fuckshit, it's reduced to 364 B:
 
 <img width="881" alt="Mirror - 1k - serveronly - after" src="https://user-images.githubusercontent.com/16416509/120270498-4e77cd80-c2dc-11eb-8c34-3813e5befd47.png">
 
-**=> 25x reduction** in allocations/GC!
-
+**=> 25x reduction** in allocations/GC!<br/>
 **=> 9x improvement** in performance (see Time/ms)!
 
 # Usage Guide
