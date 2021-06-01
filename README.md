@@ -40,15 +40,18 @@ See the **Example** folder or [kcp2k](https://github.com/vis2k/kcp2k/).
 
 Here is how the server polls, from the **Example**:
 ```csharp
-// nonalloc ReceiveFrom
-int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, serverReusableReceiveEP);
+if (serverSocket.Poll(0, SelectMode.SelectRead))
+{
+    // nonalloc ReceiveFrom
+    int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, serverReusableReceiveEP);
 
-// new connection? then allocate an actual IPEndPoint once to store it.
-if (newClientEP == null)
-    newClientEP = serverReusableReceiveEP.DeepCopyIPEndPoint();
+    // new connection? then allocate an actual IPEndPoint once to store it.
+    if (newClientEP == null)
+        newClientEP = serverReusableReceiveEP.DeepCopyIPEndPoint();
 
-// process the message...
-message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
+    // process the message...
+    message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
+}
 ```
 
 # Showcase
