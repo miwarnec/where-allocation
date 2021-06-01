@@ -101,7 +101,7 @@ namespace Fuckshit.Examples
                 int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, serverReusableReceiveEP);
 
                 // new connection?
-                if (serverReusableSendEP == null)
+                if (newClientEP == null)
                 {
                     // IPEndPointNonAlloc is reused all the time.
                     // we can't store that as the connection's endpoint.
