@@ -19,7 +19,7 @@ namespace Fuckshit.Examples
             for (int i = 0; i < SendPerUpdate; ++i)
             {
                 udp.ClientSend(message);
-                udp.ServerPoll(out int _, out ArraySegment<byte> _);
+                udp.ServerPoll(out ArraySegment<byte> _);
 
                 udp.ServerSend(message);
             }

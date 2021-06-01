@@ -44,7 +44,7 @@ namespace Fuckshit.Examples
             ClientSend(new byte[]{0x12, 0x34});
 
             // server should have something to poll now
-            bool result = ServerPoll(out int _, out ArraySegment<byte> _);
+            bool result = ServerPoll(out ArraySegment<byte> _);
             if (!result)
                 Debug.LogError($"NOT CONNECTED!");
         }
@@ -89,7 +89,7 @@ namespace Fuckshit.Examples
             return false;
         }
 
-        public bool ServerPoll(out int fromHash, out ArraySegment<byte> message)
+        public bool ServerPoll(out ArraySegment<byte> message)
         {
             if (serverSocket != null && serverSocket.Poll(0, SelectMode.SelectRead))
             {
@@ -99,11 +99,6 @@ namespace Fuckshit.Examples
 
                 // nonalloc
                 int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, serverReusableReceiveEP);
-                // SocketAddress.GetHashCode hashes port + address without
-                // allocations:
-                // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/SocketAddress.cs#L262
-                SocketAddress remoteAddress = serverReusableReceiveEP.temp;
-                fromHash = remoteAddress.GetHashCode();
 
                 // new connection?
                 if (serverReusableSendEP == null)
@@ -123,7 +118,6 @@ namespace Fuckshit.Examples
                 message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
                 return msgLength > 0;
             }
-            fromHash = 0;
             message = default;
             return false;
         }

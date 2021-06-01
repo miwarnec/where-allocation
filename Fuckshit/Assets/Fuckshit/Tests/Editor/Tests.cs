@@ -38,7 +38,7 @@ namespace Fuckshit.Tests
             ClientSend(message);
 
             // poll with IPEndPointNonAlloc
-            bool result = ServerPoll(out int _, out ArraySegment<byte> received);
+            bool result = ServerPoll(out ArraySegment<byte> received);
             Assert.That(result, Is.True);
             Assert.That(received.SequenceEqual(message));
         }
@@ -51,7 +51,7 @@ namespace Fuckshit.Tests
             ClientSend(message);
 
             // poll with IPEndPointNonAlloc
-            bool result = ServerPoll(out int _, out ArraySegment<byte> received);
+            bool result = ServerPoll(out ArraySegment<byte> received);
             Assert.That(result, Is.True);
             Assert.That(received.SequenceEqual(message));
 
@@ -60,7 +60,7 @@ namespace Fuckshit.Tests
             ClientSend(message2);
 
             // poll with IPEndPointNonAlloc
-            result = ServerPoll(out int _, out received);
+            result = ServerPoll(out received);
             Assert.That(result, Is.True);
             Assert.That(received.SequenceEqual(message2));
         }
@@ -128,7 +128,7 @@ namespace Fuckshit.Tests
         {
             // send something and then poll once
             ClientSend(message);
-            bool polled = ServerPoll(out int _, out ArraySegment<byte> _);
+            bool polled = ServerPoll(out ArraySegment<byte> _);
             Assert.That(polled, Is.True);
 
             Assert.That(serverReusableReceiveEP.temp.GetHashCode(), !Is.EqualTo(0));
