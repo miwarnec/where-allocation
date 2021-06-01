@@ -1,4 +1,4 @@
-# Fuckshit
+# where-allocation
 **_Nearly_** allocation free Mono C# UDP SendTo/ReceiveFrom **NonAlloc**.
 
 Made for [Mirror](https://github.com/vis2k/Mirror) by [vis2k](https://github.com/vis2k/) & [FakeByte](https://github.com/FakeByte/).
@@ -53,7 +53,7 @@ int ReceiveFrom (Memory<byte> buffer, int offset, int size, SocketFlags socketFl
 }
 ```
 
-# How Fuckshit avoids the Allocations
+# How where-allocation avoids the Allocations
 **IPEndPointNonAlloc** inherits from IPEndPoint to overwrite **Create()**, **Serialize()** and **GetHashCode()**.
 * **Create(SocketAddress)** does not create a new IPEndPoint anymore. It only stores the SocketAddress.
 * **Serialize()** does not create a new SocketAddress anymore. It only returns the stored one.
@@ -64,7 +64,7 @@ Using [Mirror](https://github.com/vis2k/Mirror) with 1000 monsters, Unity 2019 L
 
 <img width="702" alt="Mirror - 1k - serveronly - before" src="https://user-images.githubusercontent.com/16416509/120271597-33a65880-c2de-11eb-8f70-3dd8db20f510.png">
 
-With Fuckshit, it's reduced to **364 B**:
+With where-allocation, it's reduced to **364 B**:
 
 <img width="700" alt="Mirror - 1k - serveronly - after" src="https://user-images.githubusercontent.com/16416509/120271608-399c3980-c2de-11eb-854a-51333d41b65c.png">
 
@@ -95,12 +95,12 @@ if (serverSocket.Poll(0, SelectMode.SelectRead))
 ```
 
 # Tests
-Fuckshit comes with several unit tests to guarantee stability:
+where-allocation comes with several unit tests to guarantee stability:
 
 <img width="348" alt="2021-06-01_13-58-31@2x" src="https://user-images.githubusercontent.com/16416509/120273789-89c8cb00-c2e1-11eb-82b8-72a126edf128.png">
 
 # Showcase
-Fuckshit is used by:
+where-allocation is used by:
 * [kcp2k](https://github.com/vis2k/kcp2k/)
 * [Mirror](https://github.com/vis2k/Mirror/)
 
