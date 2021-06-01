@@ -49,6 +49,12 @@ if (!connections.Contains(connectionId))
 connections[connectionId].OnMessage(message)
 ```
 
+# Showcase
+Fuckshit is used by:
+* [kcp2k](https://github.com/vis2k/kcp2k/)
+* [Mirror](https://github.com/vis2k/Mirror/)
+
+
 # Remaining Allocations
 In Unity 2019/2020, Socket.ReceiveFrom_Internal still allocates 90 bytes because of the oudated Mono version:
 
@@ -58,8 +64,3 @@ Unity 2021.2.0.a18 is supposed to have the latest Mono:
 https://forum.unity.com/threads/unity-future-net-development-status.1092205/page-3#post-7164088
 
 Which should automatically get rid of the last allocation.
-
-# Showcase
-Fuckshit is used by:
-* [kcp2k](https://github.com/vis2k/kcp2k/)
-* [Mirror](https://github.com/vis2k/Mirror/)
