@@ -131,6 +131,32 @@ namespace WhereAllocation
                 // least we reuse it next time.
                 temp = socketAddress;
 
+                // SocketAddress.GetHashCode() depends on SocketAddress.m_changed.
+                // ReceiveFrom only sets the buffer, it does not seem to set m_changed.
+                // we need to reset m_changed for two reasons:
+                // * if m_changed is false, GetHashCode() returns the cahced m_hash
+                //   which is '0'. that would be a problem.
+                //   https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/SocketAddress.cs#L262
+                // * if we have a cached m_hash, but ReceiveFrom modified the buffer
+                //   then the GetHashCode() should change too. so we need to reset
+                //   either way.
+                //
+                // the only way to do that is by _actually_ modifying the buffer:
+                // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/SocketAddress.cs#L99
+                // so let's do that.
+                // -> unchecked in case it's byte.Max
+                unchecked
+                {
+                    temp[0] += 1;
+                    temp[0] -= 1;
+                }
+
+                // make sure this worked.
+                // at least throw an Exception to make it obvious if the trick does
+                // not work anymore, in case ReceiveFrom is ever changed.
+                if (temp.GetHashCode() == 0)
+                    throw new Exception($"SocketAddress GetHashCode() is 0 after ReceiveFrom. Does the m_changed trick not work anymore?");
+
                 // in the future, enable this again:
                 //throw new Exception($"Socket.ReceiveFrom(): passed SocketAddress={socketAddress} but expected {temp}. This should never happen. Did ReceiveFrom() change?");
             }
