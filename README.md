@@ -94,6 +94,10 @@ if (serverSocket.Poll(0, SelectMode.SelectRead))
 }
 ```
 
+# Tests
+Fuckshit comes with several unit tests to guarantee stability:
+<img width="348" alt="2021-06-01_13-58-31@2x" src="https://user-images.githubusercontent.com/16416509/120273789-89c8cb00-c2e1-11eb-82b8-72a126edf128.png">
+
 # Showcase
 Fuckshit is used by:
 * [kcp2k](https://github.com/vis2k/kcp2k/)
