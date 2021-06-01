@@ -1,5 +1,5 @@
 # where-allocation
-**_Nearly_** allocation free Mono C# UDP SendTo/ReceiveFrom **NonAlloc**.
+**_Nearly_** allocation free Mono C# SendTo/ReceiveFrom **NonAlloc** variants.
 
 ![whereallocation_smaller](https://user-images.githubusercontent.com/16416509/120292650-129e3180-c2f7-11eb-8249-e7e1e950ae87.jpg)
 
