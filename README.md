@@ -1,23 +1,12 @@
 # Fuckshit
 **_Nearly_** allocation free C# Socket.ReceiveFrom**NonAlloc** for multiplayer C# games, by vis2k.
 
-Unity 2019 LTS Mono version is old and still contains ReceiveFrom allocations that we can't work around:
-<img width="990" alt="Unity2019 LTS Mono - ReceiveFrom" src="https://user-images.githubusercontent.com/16416509/120100294-a266a300-c172-11eb-9b64-f0c04c8db0a8.png">
-
-
-Unity 2021.2.0.a18 is supposed to have the latest Mono:
-https://forum.unity.com/threads/unity-future-net-development-status.1092205/page-3#post-7164088
-
-Will retest then...
-
 # ReceiveFrom Allocations
 C#'s Socket.ReceiveFrom has heavy allocations (338 byte):
 
 <img width="595" alt="ReceiveFrom_Before" src="https://user-images.githubusercontent.com/16416509/120093573-d24f7f80-c14d-11eb-8afe-573942b71b60.png">
 
 Which is a huge issue for multiplayer games.
-
-
 
 # Why Socket.ReceiveFrom Allocates
 It calls EndPoint.Create(SocketAddress) to return a new EndPoint each time:
@@ -61,9 +50,14 @@ connections[connectionId].OnMessage(message)
 ```
 
 # Remaining Allocations
-Socket.ReceiveFrom_Internal still allocates 90 bytes:
+In Unity 2019/2020, Socket.ReceiveFrom_Internal still allocates 90 bytes because of the oudated Mono version:
 
-https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1885
+<img width="990" alt="Unity2019 LTS Mono - ReceiveFrom" src="https://user-images.githubusercontent.com/16416509/120100294-a266a300-c172-11eb-9b64-f0c04c8db0a8.png">
+
+Unity 2021.2.0.a18 is supposed to have the latest Mono:
+https://forum.unity.com/threads/unity-future-net-development-status.1092205/page-3#post-7164088
+
+Which should automatically get rid of the last allocation.
 
 # Showcase
 Fuckshit is used by:
