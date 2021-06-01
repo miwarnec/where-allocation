@@ -8,10 +8,48 @@ Mono C#'s Socket.ReceiveFrom has heavy allocations (338 byte in Unity):
 
 Which is a huge issue for multiplayer games which try to minimize runtime allocations / GC.
 
-# Why Socket.ReceiveFrom Allocates
-It calls EndPoint.Create(SocketAddress) to return a new EndPoint each time:
+It allocates because IPEndPoint **.Create** allocates a new IPEndPoint, and **Serialize()** allocates a new SocketAddress.
 
-https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1761
+Both functions are called in [Mono's ReceiveFrom](https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1761):
+```csharp
+int ReceiveFrom (Memory<byte> buffer, int offset, int size, SocketFlags socketFlags, ref EndPoint remoteEP, out SocketError errorCode)
+{
+    SocketAddress sockaddr = remoteEP.Serialize();
+
+    int nativeError;
+    int cnt;
+    unsafe {
+        using (var handle = buffer.Slice (offset, size).Pin ()) {
+            cnt = ReceiveFrom_internal (m_Handle, (byte*)handle.Pointer, size, socketFlags, ref sockaddr, out nativeError, is_blocking);
+        }
+    }
+
+    errorCode = (SocketError) nativeError;
+    if (errorCode != SocketError.Success) {
+        if (errorCode != SocketError.WouldBlock && errorCode != SocketError.InProgress) {
+            is_connected = false;
+        } else if (errorCode == SocketError.WouldBlock && is_blocking) { // This might happen when ReceiveTimeout is set
+            errorCode = SocketError.TimedOut;
+        }
+
+        return 0;
+    }
+
+    is_connected = true;
+    is_bound = true;
+
+    /* If sockaddr is null then we're a connection oriented protocol and should ignore the
+     * remoteEP parameter (see MSDN documentation for Socket.ReceiveFrom(...) ) */
+    if (sockaddr != null) {
+        /* Stupidly, EndPoint.Create() is an instance method */
+        remoteEP = remoteEP.Create (sockaddr);
+    }
+
+    seed_endpoint = remoteEP;
+
+    return cnt;
+}
+```
 
 # How Fuckshit avoids the Allocations
 **IPEndPointNonAlloc** inherits from IPEndPoint to overwrite **Create()**, **Serialize()** and **GetHashCode()**.
