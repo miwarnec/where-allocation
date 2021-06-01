@@ -43,18 +43,9 @@ Here is how the server polls, from the **Example**:
 // nonalloc ReceiveFrom
 int msgLength = serverSocket.ReceiveFrom_NonAlloc(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, serverReusableReceiveEP);
 
-// new connection?
+// new connection? then allocate an actual IPEndPoint once to store it.
 if (newClientEP == null)
-{
-    // IPEndPointNonAlloc is reused all the time.
-    // we can't store that as the connection's endpoint.
-    // we need a new copy!
     newClientEP = serverReusableReceiveEP.DeepCopyIPEndPoint();
-
-    // for allocation free sending, we also need another
-    // IPEndPointNonAlloc.
-    serverReusableSendEP = new IPEndPointNonAlloc(newClientEP.Address, newClientEP.Port);
-}
 
 // process the message...
 message = new ArraySegment<byte>(receiveBuffer, 0, msgLength);
