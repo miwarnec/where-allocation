@@ -1,5 +1,5 @@
 # Fuckshit
-**_Nearly_** allocation free Mono C# UDP SendTo/ReceiveFrom **NonAlloc** for multiplayer games, by vis2k.
+**_Nearly_** allocation free Mono C# UDP SendTo/ReceiveFrom **NonAlloc**.
 
 # ReceiveFrom Allocations
 C#'s Socket.ReceiveFrom has heavy allocations (338 byte in Unity):
