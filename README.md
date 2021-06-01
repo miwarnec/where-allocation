@@ -31,28 +31,17 @@ With Fuckshit, it's reduced to **364 B**:
 **=> 25x reduction** in allocations/GC!<br/>
 
 # Usage Guide
-It's important to understand that ReceiveFrom_NonAlloc takes IPEndPointNonAlloc which:
-- only holds a SocketAddress in **.temp**
-- does not have its values set like a regular IPEndPoint would
-- is reused every time
+See the example folder or [kcp2k](https://github.com/vis2k/kcp2k/).
 
-In other words, allocate a new IPEndPoint only **once** when adding the connection the first time.
+* Use IPEndPointNonAlloc
+* Use ReceiveFrom_NonAlloc
+* Use SendTo_NonAlloc
 
-## Server Pseudcode:
-```csharp
-// ReceiveFromNonAlloc with reusable IPEndPointNonAlloc
-int received = socket.ReceiveFromNonAlloc(out message, reusable);
-
-// hash (nonalloc)
-int connectionId = SocketAddress.GetHashCode();
-
-// allocate IPEndPoint only once when adding connection
-if (!connections.Contains(connectionId))
-    connectons[connectionId] = new IPEndPoint(SocketAddress);
-
-// process message
-connections[connectionId].OnMessage(message)
-```
+Keep in mind that IPEndPointNonAlloc is **not** a true IPEndPoint!
+* It holds the SocketAddress in **.temp**
+* It's reused over and over again. Don't store it as EndPoint for new connections.
+  * Use IPEndPointNonAlloc.DeepCopyIPEndPoint() to create a true IPEndPoint copy
+  * Do that only once for new connections
 
 # Showcase
 Fuckshit is used by:
