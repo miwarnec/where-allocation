@@ -1,10 +1,10 @@
 {
-    "name": "Fuckshit.Tests",
+    "name": "where-allocations.Tests",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Fuckshit",
-        "Example"
+        "Example",
+        "where-allocations"
     ],
     "includePlatforms": [
         "Editor"

@@ -1,3 +1,3 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Fuckshit.Tests")]
+[assembly: InternalsVisibleTo("where-allocations.Tests")]

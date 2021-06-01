@@ -3,9 +3,9 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using NUnit.Framework;
-using Fuckshit.Examples;
+using WhereAllocation.Examples;
 
-namespace Fuckshit.Tests
+namespace WhereAllocation.Tests
 {
     public class Tests : UdpTest
     {

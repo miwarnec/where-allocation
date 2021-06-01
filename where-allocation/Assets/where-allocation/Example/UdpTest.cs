@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using UnityEngine;
 
-namespace Fuckshit.Examples
+namespace WhereAllocation.Examples
 {
     public class UdpTest
     {

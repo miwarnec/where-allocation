@@ -1,6 +1,5 @@
 {
-    "name": "Fuckshit",
-    "rootNamespace": "",
+    "name": "where-allocations",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

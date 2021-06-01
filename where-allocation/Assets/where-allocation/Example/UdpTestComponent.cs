@@ -2,7 +2,7 @@
 using System;
 using UnityEngine;
 
-namespace Fuckshit.Examples
+namespace WhereAllocation.Examples
 {
     public class UdpTestComponent : MonoBehaviour
     {

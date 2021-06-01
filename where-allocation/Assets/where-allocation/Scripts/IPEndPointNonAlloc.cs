@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 
-namespace Fuckshit
+namespace WhereAllocation
 {
     public class IPEndPointNonAlloc : IPEndPoint
     {
