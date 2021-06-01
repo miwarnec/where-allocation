@@ -64,7 +64,6 @@ In Unity 2019/2020, Socket.ReceiveFrom_Internal still allocates 90 bytes because
 
 <img width="990" alt="Unity2019 LTS Mono - ReceiveFrom" src="https://user-images.githubusercontent.com/16416509/120100294-a266a300-c172-11eb-9b64-f0c04c8db0a8.png">
 
-Unity 2021.2.0.a18 is supposed to have the latest Mono:
-https://forum.unity.com/threads/unity-future-net-development-status.1092205/page-3#post-7164088
+Unity 2021.2.0.a18 is [supposed to have the latest Mono](https://forum.unity.com/threads/unity-future-net-development-status.1092205/page-3#post-7164088).
 
 Which should automatically get rid of the last allocation.
