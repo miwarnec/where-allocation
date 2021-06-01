@@ -142,6 +142,14 @@ namespace Fuckshit
             return this;
         }
 
+        // we need to overwrite GetHashCode() for two reasons.
+        // https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPEndPoint.cs#L160
+        // * it uses m_Address. but our true SocketAddress is in m_temp.
+        //   m_Address might not be set at all.
+        // * m_Address.GetHashCode() allocates:
+        //   https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPAddress.cs#L699
+        public override int GetHashCode() => temp.GetHashCode();
+
         // helper function to create an ACTUAL new IPEndPoint from this.
         // server needs it to store new connections as unique IPEndPoints.
         public IPEndPoint DeepCopyIPEndPoint()

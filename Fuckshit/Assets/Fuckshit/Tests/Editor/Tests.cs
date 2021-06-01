@@ -102,19 +102,17 @@ namespace Fuckshit.Tests
         }
 
         // make sure that GetHashCode works for our custom class.
-        // there are issues where SocketAddress has values, but m_changed is
-        // false and so HashCode is never calculated.
+        // it's supposed to use temp.GetHashCode.
         [Test]
-        public void GetHashCodeTest()
+        public void GetHashCodeTest_UsesTempSocketAddress()
         {
             IPAddress address = IPAddress.Parse("127.0.0.1");
             IPEndPointNonAlloc endPoint = new IPEndPointNonAlloc(address, 1337);
-            Assert.That(endPoint.GetHashCode(), Is.EqualTo(16778566));
+            Assert.That(endPoint.GetHashCode(), Is.EqualTo(939851901));
         }
 
         // make sure that GetHashCode works for our custom class.
-        // there are issues where SocketAddress has values, but m_changed is
-        // false and so HashCode is never calculated.
+        // using .temp.GetHashCode() should work too.
         [Test]
         public void GetHashCodeTest_temp()
         {
