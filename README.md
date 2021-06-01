@@ -1,12 +1,12 @@
 # Fuckshit
-**_Nearly_** allocation free C# Socket.ReceiveFrom**NonAlloc** for multiplayer C# games, by vis2k.
+**_Nearly_** allocation free C# UDP SendTo/ReceiveFrom **NonAlloc** for multiplayer games, by vis2k.
 
 # ReceiveFrom Allocations
-C#'s Socket.ReceiveFrom has heavy allocations (338 byte):
+C#'s Socket.ReceiveFrom has heavy allocations (338 byte in Unity):
 
 <img width="595" alt="ReceiveFrom_Before" src="https://user-images.githubusercontent.com/16416509/120093573-d24f7f80-c14d-11eb-8afe-573942b71b60.png">
 
-Which is a huge issue for multiplayer games.
+Which is a huge issue for multiplayer games which try to minimize runtime allocations / GC.
 
 # Why Socket.ReceiveFrom Allocates
 It calls EndPoint.Create(SocketAddress) to return a new EndPoint each time:
@@ -14,29 +14,34 @@ It calls EndPoint.Create(SocketAddress) to return a new EndPoint each time:
 https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1761
 
 # How Fuckshit avoids the Allocations
-IPEndPointNonAlloc inherits from IPEndPoint to overwrite Create() and Serialize().
+IPEndPointNonAlloc inherits from IPEndPoint to overwrite Create(), Serialize() and GetHashCode().
 * Create(SocketAddress) does not create a new object anymore. It only stores the SocketAddress.
-* Serialize does not create a new SocketAddress anymore. It only returns the stored one.
+* Serialize() does not create a new SocketAddress anymore. It only returns the stored one.
+* GetHashCode() returns the cached SocketAddress GetHashCode() directly without allocations.
 
-As result, we get a **3.75x** reduction in allocations. 
+# Benchmarks
+Using [Mirror](https://github.com/vis2k/Mirror) with 1000 monsters, we previously allocated 8.9KB:
 
-ReceiveFromNonAlloc only allocates 90 byte:
+<img width="889" alt="Mirror - 1k - serveronly - before" src="https://user-images.githubusercontent.com/16416509/120270474-4455cf00-c2dc-11eb-914f-cd99654341bc.png">
 
-<img width="580" alt="ReceiveFrom_IPEndPointNonAlloc_ReceiveNonAlloc" src="https://user-images.githubusercontent.com/16416509/120093652-3ffbab80-c14e-11eb-93e9-0d350bead4fa.png">
+With Fuckshit, it's reduced to 364 B:
+
+<img width="881" alt="Mirror - 1k - serveronly - after" src="https://user-images.githubusercontent.com/16416509/120270498-4e77cd80-c2dc-11eb-8c34-3813e5befd47.png">
+
+**=> 25x reduction** in allocations/GC!
 
 # Usage Guide
-It's important to understand that ReceiveFrom_NonAlloc:
-- returns a SocketAddress, not an EndPoint
-- always writes into the **same** SocketAddress object
+It's important to understand that ReceiveFrom_NonAlloc takes IPEndPointNonAlloc which:
+- only holds a SocketAddress in **.temp**
+- does not have its values set like a regular IPEndPoint would
+- is reused every time
 
-In other words, you allocate your own IPEndPoint only **once** when adding the connection the first time.
-Afterwards, you can use the allocation free SocketAddress.GetHashCode() function to identify which connection the message is from.
+In other words, allocate a new IPEndPoint only **once** when adding the connection the first time.
 
 ## Server Pseudcode:
 ```csharp
-// ReceiveFromNonAlloc always returns the same 'object'
-// with different internal values.
-ReceiveFromNonAlloc(out message, out SocketAddress);
+// ReceiveFromNonAlloc with reusable IPEndPointNonAlloc
+int received = socket.ReceiveFromNonAlloc(out message, reusable);
 
 // hash (nonalloc)
 int connectionId = SocketAddress.GetHashCode();
@@ -53,7 +58,6 @@ connections[connectionId].OnMessage(message)
 Fuckshit is used by:
 * [kcp2k](https://github.com/vis2k/kcp2k/)
 * [Mirror](https://github.com/vis2k/Mirror/)
-
 
 # Remaining Allocations
 In Unity 2019/2020, Socket.ReceiveFrom_Internal still allocates 90 bytes because of the oudated Mono version:
