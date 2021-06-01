@@ -20,7 +20,7 @@ https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/c
 * **GetHashCode()** returns the cached SocketAddress GetHashCode() directly without allocations.
 
 # Benchmarks
-Using [Mirror](https://github.com/vis2k/Mirror) with 1000 monsters, we previously allocated 8.9KB:
+Using [Mirror](https://github.com/vis2k/Mirror) with 1000 monsters, Unity 2019 LTS (Deep Profiling), we previously allocated 8.9KB:
 
 <img width="876" alt="Mirror - 1k - serveronly - before" src="https://user-images.githubusercontent.com/16416509/120271307-abc04e80-c2dd-11eb-97b8-68bdbaadfbb6.png">
 
