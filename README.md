@@ -22,11 +22,11 @@ https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/c
 # Benchmarks
 Using [Mirror](https://github.com/vis2k/Mirror) with 1000 monsters, Unity 2019 LTS (Deep Profiling), we previously allocated **8.9 KB**:
 
-<img width="876" alt="Mirror - 1k - serveronly - before" src="https://user-images.githubusercontent.com/16416509/120271307-abc04e80-c2dd-11eb-97b8-68bdbaadfbb6.png">
+<img width="702" alt="Mirror - 1k - serveronly - before" src="https://user-images.githubusercontent.com/16416509/120271597-33a65880-c2de-11eb-8f70-3dd8db20f510.png">
 
 With Fuckshit, it's reduced to **364 B**:
 
-<img width="881" alt="Mirror - 1k - serveronly - after" src="https://user-images.githubusercontent.com/16416509/120270498-4e77cd80-c2dc-11eb-8c34-3813e5befd47.png">
+<img width="700" alt="Mirror - 1k - serveronly - after" src="https://user-images.githubusercontent.com/16416509/120271608-399c3980-c2de-11eb-854a-51333d41b65c.png">
 
 **=> 25x reduction** in allocations/GC!<br/>
 
