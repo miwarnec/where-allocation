@@ -12,7 +12,7 @@ Which is a huge issue for multiplayer games which try to minimize runtime alloca
 
 It allocates because IPEndPoint **.Create** allocates a new IPEndPoint, and **Serialize()** allocates a new SocketAddress.
 
-Both functions are called in [Mono's ReceiveFrom](https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1761):
+Both functions are called in [Mono's Socket.ReceiveFrom](https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1761):
 ```csharp
 int ReceiveFrom (Memory<byte> buffer, int offset, int size, SocketFlags socketFlags, ref EndPoint remoteEP, out SocketError errorCode)
 {
