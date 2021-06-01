@@ -1,6 +1,8 @@
 # Fuckshit
 **_Nearly_** allocation free Mono C# UDP SendTo/ReceiveFrom **NonAlloc**.
 
+Made for [Mirror](https://github.com/vis2k/Mirror) by [vis2k](https://github.com/vis2k/) & [FakeByte](https://github.com/FakeByte/).
+
 # ReceiveFrom Allocations
 Mono C#'s Socket.ReceiveFrom has heavy allocations (338 byte in Unity):
 
