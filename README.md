@@ -14,10 +14,10 @@ It calls EndPoint.Create(SocketAddress) to return a new EndPoint each time:
 https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1761
 
 # How Fuckshit avoids the Allocations
-IPEndPointNonAlloc inherits from IPEndPoint to overwrite Create(), Serialize() and GetHashCode().
-* Create(SocketAddress) does not create a new object anymore. It only stores the SocketAddress.
-* Serialize() does not create a new SocketAddress anymore. It only returns the stored one.
-* GetHashCode() returns the cached SocketAddress GetHashCode() directly without allocations.
+**IPEndPointNonAlloc** inherits from IPEndPoint to overwrite **Create()**, **Serialize()** and **GetHashCode()**.
+* **Create(SocketAddress)** does not create a new IPEndPoint anymore. It only stores the SocketAddress.
+* **Serialize()** does not create a new SocketAddress anymore. It only returns the stored one.
+* **GetHashCode()** returns the cached SocketAddress GetHashCode() directly without allocations.
 
 # Benchmarks
 Using [Mirror](https://github.com/vis2k/Mirror) with 1000 monsters, we previously allocated 8.9KB:
