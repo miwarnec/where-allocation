@@ -2,7 +2,7 @@
 **_Nearly_** allocation free Mono C# UDP SendTo/ReceiveFrom **NonAlloc**.
 
 # ReceiveFrom Allocations
-C#'s Socket.ReceiveFrom has heavy allocations (338 byte in Unity):
+Mono C#'s Socket.ReceiveFrom has heavy allocations (338 byte in Unity):
 
 <img width="595" alt="ReceiveFrom_Before" src="https://user-images.githubusercontent.com/16416509/120093573-d24f7f80-c14d-11eb-8afe-573942b71b60.png">
 
