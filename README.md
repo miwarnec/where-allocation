@@ -3,6 +3,8 @@
 
 Made for [Mirror](https://github.com/vis2k/Mirror) by [vis2k](https://github.com/vis2k/) & [FakeByte](https://github.com/FakeByte/).
 
+![whereallocation_smaller](https://user-images.githubusercontent.com/16416509/120292650-129e3180-c2f7-11eb-8249-e7e1e950ae87.jpg)
+
 # ReceiveFrom Allocations
 Mono C#'s Socket.ReceiveFrom has heavy allocations (338 byte in Unity):
 
