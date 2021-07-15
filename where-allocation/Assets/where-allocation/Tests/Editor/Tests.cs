@@ -107,7 +107,13 @@ namespace WhereAllocation.Tests
         {
             IPAddress address = IPAddress.Parse("127.0.0.1");
             IPEndPointNonAlloc endPoint = new IPEndPointNonAlloc(address, 1337);
+
+            // Unity mono / netcore hashcodes are slightly different
+#if UNITY_2018_3_OR_NEWER
             Assert.That(endPoint.GetHashCode(), Is.EqualTo(939851901));
+#else
+            Assert.That(endPoint.GetHashCode(), Is.EqualTo(939852415));
+#endif
         }
 
         // make sure that GetHashCode works for our custom class.
@@ -117,7 +123,13 @@ namespace WhereAllocation.Tests
         {
             IPAddress address = IPAddress.Parse("127.0.0.1");
             IPEndPointNonAlloc endPoint = new IPEndPointNonAlloc(address, 1337);
+
+            // Unity mono / netcore hashcodes are slightly different
+#if UNITY_2018_3_OR_NEWER
             Assert.That(endPoint.temp.GetHashCode(), Is.EqualTo(939851901));
+#else
+            Assert.That(endPoint.temp.GetHashCode(), Is.EqualTo(939852415));
+#endif
         }
 
         // by default, SocketAddress.GetHashCode() returns 0 after usage in
