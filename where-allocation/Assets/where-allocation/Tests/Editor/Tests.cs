@@ -138,15 +138,19 @@ namespace WhereAllocation.Tests
         [Test]
         public void DeepCopyIPEndPoint()
         {
-            IPEndPoint realEP = serverReusableReceiveEP.DeepCopyIPEndPoint();
+            // create a IPEndPointNonAlloc with unique values
+            IPEndPointNonAlloc unique = new IPEndPointNonAlloc(IPAddress.Parse("1.2.3.4"), 42);
 
-            // check if it's a true copy
-            Assert.That(realEP, !Is.EqualTo(serverReusableReceiveEP));
+            // deep copy
+            IPEndPoint deepCopy = unique.DeepCopyIPEndPoint();
+
+            // result should be the same
+            Assert.That(deepCopy.ToString(), Is.EqualTo("1.2.3.4:42"));
+            Assert.That(unique.Equals(deepCopy), Is.True);
 
             // check if the endpoint's SocketAddress is as expected
-            int beforeHash = serverReusableReceiveEP.temp.GetHashCode();
-            SocketAddress serialized = realEP.Serialize();
-            int afterHash = realEP.Serialize().GetHashCode();
+            int beforeHash = unique.temp.GetHashCode();
+            int afterHash = deepCopy.Serialize().GetHashCode();
             Assert.That(beforeHash, Is.EqualTo(afterHash));
         }
     }
